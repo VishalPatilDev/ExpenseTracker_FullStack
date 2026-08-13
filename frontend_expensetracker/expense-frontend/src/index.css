@@ -1,0 +1,1614 @@
+/* ========================================
+   GLOBAL RESET
+======================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+
+/* ========================================
+   SETTINGS
+======================================== */
+
+.settings-container {
+  display: flex;
+  width: 100%;
+  min-height: 600px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  overflow: hidden;
+}
+
+
+/* ========================================
+   SIDEBAR
+======================================== */
+
+.settings-sidebar {
+  width: 220px;
+  min-width: 220px;
+
+  padding: 20px 12px;
+
+  background: #ffffff;
+
+  border-right: 1px solid #e2e8f0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+.settings-sidebar button {
+  width: 100%;
+
+  padding: 12px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #475569;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.settings-sidebar button:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+
+.settings-sidebar button.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+
+/* ========================================
+   CONTENT
+======================================== */
+
+.settings-content {
+  flex: 1;
+
+  padding: 30px;
+
+  background: #f8fafc;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.settings-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 25px;
+}
+
+
+.settings-header h2 {
+  margin: 0;
+
+  font-size: 24px;
+  font-weight: 600;
+
+  color: #0f172a;
+}
+
+
+/* ========================================
+   COMMON BUTTON
+======================================== */
+
+.add-button {
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.add-button:hover {
+  background: #1d4ed8;
+}
+
+
+.add-button:active {
+  transform: scale(0.97);
+}
+
+
+/* ========================================
+   FORM
+======================================== */
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  padding: 20px;
+  margin-bottom: 25px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+
+/* ========================================
+   INPUT
+======================================== */
+
+.form-card input {
+  width: 100%;
+
+  padding: 11px 13px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #0f172a;
+
+  font-size: 14px;
+
+  transition: 0.2s ease;
+}
+
+
+.form-card input::placeholder {
+  color: #94a3b8;
+}
+
+
+.form-card input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ========================================
+   FORM BUTTONS
+======================================== */
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+
+  margin-top: 5px;
+}
+
+
+.save-button {
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: #16a34a;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.save-button:hover {
+  background: #15803d;
+}
+
+
+.cancel-button {
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: #e2e8f0;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.cancel-button:hover {
+  background: #cbd5e1;
+}
+
+
+/* ========================================
+   LIST
+======================================== */
+
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+.list-item {
+  padding: 16px 18px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+
+  transition: 0.2s ease;
+}
+
+
+.list-item:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+
+/* ========================================
+   CONTACT
+======================================== */
+
+.list-item strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #0f172a;
+
+  font-size: 16px;
+  font-weight: 600;
+}
+
+
+.list-item p {
+  margin: 4px 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   CATEGORY
+======================================== */
+
+.category-item {
+  color: #334155;
+
+  font-size: 15px;
+  font-weight: 500;
+}
+
+
+/* ========================================
+   EMPTY MESSAGE
+======================================== */
+
+.empty-message {
+  padding: 30px;
+
+  margin: 0;
+
+  text-align: center;
+
+  background: #ffffff;
+
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+
+  .settings-container {
+    flex-direction: column;
+  }
+
+
+  .settings-sidebar {
+    width: 100%;
+    min-width: 0;
+
+    padding: 10px;
+
+    flex-direction: row;
+
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+
+  .settings-sidebar button {
+    text-align: center;
+  }
+
+
+  .settings-content {
+    padding: 20px;
+  }
+
+
+  .settings-header {
+    gap: 15px;
+  }
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+
+  .settings-content {
+    padding: 15px;
+  }
+
+
+  .settings-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+
+  .add-button {
+    width: 100%;
+  }
+
+
+  .form-card {
+    padding: 15px;
+  }
+
+
+  .form-buttons {
+    flex-direction: column;
+  }
+
+
+  .save-button,
+  .cancel-button {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   LOGIN PAGE
+======================================== */
+
+.login-page {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background:
+    linear-gradient(135deg,
+      #eff6ff 0%,
+      #f8fafc 50%,
+      #eef2ff 100%);
+}
+
+
+/* ========================================
+   LOGIN CARD
+======================================== */
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 40px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+
+/* ========================================
+   LOGIN TITLE
+======================================== */
+
+.login-card h1 {
+  margin: 0;
+
+  text-align: center;
+
+  color: #0f172a;
+
+  font-size: 28px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   SUBTITLE
+======================================== */
+
+.login-subtitle {
+  margin: 8px 0 30px;
+
+  text-align: center;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   LOGIN FORM
+======================================== */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+
+/* ========================================
+   INPUTS
+======================================== */
+
+.login-form input {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #0f172a;
+
+  font-size: 15px;
+
+  transition: 0.2s ease;
+}
+
+
+.login-form input::placeholder {
+  color: #94a3b8;
+}
+
+
+.login-form input:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ========================================
+   LOGIN BUTTON
+======================================== */
+
+.login-form button {
+  width: 100%;
+
+  padding: 13px;
+
+  margin-top: 5px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+
+.login-form button:hover {
+  background: #1d4ed8;
+}
+
+
+.login-form button:active {
+  transform: scale(0.98);
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+
+  .login-page {
+    padding: 15px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+  }
+
+  .login-card h1 {
+    font-size: 24px;
+  }
+}
+
+/* ========================================
+   EXPENSE LIST PAGE
+======================================== */
+
+.list-page {
+  width: 100%;
+  padding: 30px;
+
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+
+/* ========================================
+   PAGE TITLE
+======================================== */
+
+.list-page h1 {
+  margin: 0 0 25px 0;
+
+  color: #0f172a;
+
+  font-size: 28px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   FILTER CONTAINER
+======================================== */
+
+.filter-container {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(160px, 1fr)) auto;
+
+  gap: 16px;
+
+  padding: 20px;
+
+  margin-bottom: 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+
+/* ========================================
+   FILTER GROUP
+======================================== */
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.filter-group label {
+  color: #334155;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   SELECT
+======================================== */
+
+.filter-group select {
+  width: 100%;
+
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+
+.filter-group select:hover {
+  border-color: #94a3b8;
+}
+
+
+.filter-group select:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ========================================
+   FILTER BUTTONS
+======================================== */
+
+.filter-buttons {
+  display: flex;
+
+  align-items: flex-end;
+}
+
+
+.filter-buttons button {
+  height: 42px;
+
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: #e2e8f0;
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition: 0.2s ease;
+}
+
+
+.filter-buttons button:hover {
+  background: #cbd5e1;
+}
+
+
+.filter-buttons button:active {
+  transform: scale(0.97);
+}
+
+
+/* ========================================
+   LIST SUMMARY
+======================================== */
+
+.list-summary {
+  padding: 12px 16px;
+
+  margin-bottom: 12px;
+
+  color: #64748b;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+/* ========================================
+   TABLE CONTAINER
+======================================== */
+
+.table-container {
+  width: 100%;
+
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+
+/* ========================================
+   TABLE
+======================================== */
+
+.table-container table {
+  width: 100%;
+
+  min-width: 1500px;
+
+  border-collapse: collapse;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   TABLE HEADER
+======================================== */
+
+.table-container thead {
+  background: #f1f5f9;
+}
+
+
+.table-container th {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: left;
+
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   TABLE BODY
+======================================== */
+
+.table-container td {
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #f1f5f9;
+
+  color: #475569;
+
+  white-space: nowrap;
+
+  vertical-align: middle;
+}
+
+
+/* ========================================
+   TABLE ROW
+======================================== */
+
+.table-container tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+
+.table-container tbody tr:hover {
+  background: #f8fafc;
+}
+
+
+.table-container tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* ========================================
+   INCOME
+======================================== */
+
+.income {
+  display: inline-block;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  background: #dcfce7;
+  color: #15803d;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   EXPENSE
+======================================== */
+
+.expense {
+  display: inline-block;
+
+  padding: 5px 9px;
+
+  border-radius: 20px;
+
+  background: #fee2e2;
+  color: #dc2626;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   TABLE MONEY VALUES
+======================================== */
+
+.table-container td:nth-child(7),
+.table-container td:nth-child(9),
+.table-container td:nth-child(12),
+.table-container td:nth-child(13),
+.table-container td:nth-child(14) {
+  color: #0f172a;
+
+  font-weight: 600;
+}
+
+
+/* ========================================
+   PAYMENT STATUS
+======================================== */
+
+.table-container td:nth-child(15) {
+  font-weight: 600;
+}
+
+
+/* ========================================
+   LOADING / EMPTY MESSAGE
+======================================== */
+
+.table-container>p {
+  padding: 50px 20px;
+
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 15px;
+
+  text-align: center;
+}
+
+
+/* ========================================
+   SCROLLBAR
+======================================== */
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 10px;
+}
+
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+/* ========================================
+   TABLET
+======================================== */
+
+@media (max-width: 1100px) {
+
+  .list-page {
+    padding: 20px;
+  }
+
+
+  .filter-container {
+    grid-template-columns:
+      repeat(2, minmax(180px, 1fr));
+  }
+
+
+  .filter-buttons {
+    align-items: center;
+  }
+
+
+  .filter-buttons button {
+    width: 100%;
+  }
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+
+  .list-page {
+    padding: 15px;
+  }
+
+
+  .list-page h1 {
+    font-size: 23px;
+
+    margin-bottom: 18px;
+  }
+
+
+  .filter-container {
+    grid-template-columns: 1fr;
+
+    padding: 15px;
+
+    gap: 14px;
+  }
+
+
+  .filter-buttons {
+    width: 100%;
+  }
+
+
+  .filter-buttons button {
+    width: 100%;
+  }
+
+
+  .list-summary {
+    padding: 10px 5px;
+
+    font-size: 13px;
+  }
+
+
+  .table-container {
+    border-radius: 8px;
+  }
+}
+
+/* ========================================
+   EXPENSE / TRANSACTION PAGE
+======================================== */
+
+.expense-page {
+  min-height: 100vh;
+
+  padding: 30px;
+
+  background: #f8fafc;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+/* ========================================
+   EXPENSE CARD
+======================================== */
+
+.expense-card {
+  width: 100%;
+  max-width: 850px;
+
+  padding: 35px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  box-shadow:
+    0 4px 15px rgba(15, 23, 42, 0.06);
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.expense-header {
+  margin-bottom: 30px;
+
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.expense-header h1 {
+  margin: 0 0 6px;
+
+  color: #0f172a;
+
+  font-size: 27px;
+  font-weight: 700;
+}
+
+
+.expense-header p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+}
+
+
+/* ========================================
+   FORM
+======================================== */
+
+.expense-card form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+/* ========================================
+   FORM GROUP
+======================================== */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.form-group label {
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* ========================================
+   INPUT / SELECT / TEXTAREA
+======================================== */
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+
+  padding: 11px 13px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffffff;
+  color: #0f172a;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* Select */
+
+.form-group select {
+  height: 43px;
+
+  cursor: pointer;
+}
+
+
+/* Textarea */
+
+.form-group textarea {
+  resize: vertical;
+
+  min-height: 100px;
+}
+
+
+/* Placeholder */
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
+}
+
+
+/* Focus */
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+
+/* ========================================
+   CHECKBOX SECTION
+======================================== */
+
+.checkbox-section {
+  padding: 15px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+
+/* ========================================
+   CHECKBOX LABEL
+======================================== */
+
+.checkbox-label {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  color: #334155;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+
+  margin: 0;
+
+  accent-color: #2563eb;
+
+  cursor: pointer;
+}
+
+
+/* ========================================
+   CONDITIONAL GST / TDS FIELDS
+======================================== */
+
+.conditional-fields {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 16px;
+
+  margin-top: 18px;
+
+  padding-top: 18px;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+
+/* ========================================
+   TOTAL SECTION
+======================================== */
+
+.total-section {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  padding: 18px;
+
+  background: #eff6ff;
+
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+
+.total-section label {
+  color: #1e40af;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+
+.total-section input {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #1e3a8a;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   SUBMIT BUTTON
+======================================== */
+
+.submit-expense-button {
+  width: 100%;
+
+  padding: 14px 20px;
+
+  margin-top: 5px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+
+.submit-expense-button:hover {
+  background: #1d4ed8;
+}
+
+
+.submit-expense-button:active {
+  transform: scale(0.98);
+}
+
+
+/* ========================================
+   DISABLED / READONLY TOTAL
+======================================== */
+
+.total-section input:read-only {
+  cursor: default;
+}
+
+
+/* ========================================
+   TABLET
+======================================== */
+
+@media (max-width: 768px) {
+
+  .expense-page {
+    padding: 20px;
+  }
+
+
+  .expense-card {
+    padding: 25px;
+  }
+
+
+  .conditional-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+
+  .expense-page {
+    padding: 12px;
+  }
+
+
+  .expense-card {
+    padding: 20px 15px;
+
+    border-radius: 10px;
+  }
+
+
+  .expense-header {
+    margin-bottom: 22px;
+  }
+
+
+  .expense-header h1 {
+    font-size: 23px;
+  }
+
+
+  .expense-card form {
+    gap: 15px;
+  }
+
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 14px;
+  }
+
+
+  .checkbox-section {
+    padding: 13px;
+  }
+
+
+  .conditional-fields {
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+  }
+
+
+  .total-section {
+    padding: 15px;
+  }
+
+
+  .submit-expense-button {
+    padding: 13px;
+  }
+}
+
+/* ========================================
+   NAVBAR
+======================================== */
+
+.navbar {
+  width: 100%;
+
+  min-height: 64px;
+
+  padding: 0 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.05);
+
+  position: sticky;
+  top: 0;
+
+  z-index: 1000;
+}
+
+
+/* ========================================
+   NAVBAR BRAND
+======================================== */
+
+.navbar-brand {
+  color: #2563eb;
+
+  font-size: 20px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   NAVBAR LINKS
+======================================== */
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.navbar-links a {
+  padding: 9px 14px;
+
+  border-radius: 7px;
+
+  color: #475569;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+
+.navbar-links a:hover {
+  background: #eff6ff;
+
+  color: #2563eb;
+}
+
+
+/* ========================================
+   ACTIVE LINK
+======================================== */
+
+/*
+   NavLink is recommended if you want
+   the current page to stay highlighted.
+*/
+
+.navbar-links a.active {
+  background: #2563eb;
+
+  color: #ffffff;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+
+  .navbar {
+    padding: 10px 15px;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+  }
+
+
+  .navbar-brand {
+    text-align: center;
+  }
+
+
+  .navbar-links {
+    width: 100%;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 4px;
+  }
+
+
+  .navbar-links a {
+    padding: 8px 10px;
+
+    font-size: 13px;
+  }
+}
