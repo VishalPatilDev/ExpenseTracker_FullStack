@@ -22,7 +22,7 @@ const getEmptyForm = () => ({
     gstNumber: "",
     tdsPercentage: "",
     total: 0,
-    paymentType: "COMPLETE",
+    paymentType: "ONE_TIME",
     remark: "",
 });
 
@@ -188,7 +188,7 @@ export default function Expense() {
         }
 
         // If user switches back to complete
-        if (value === "COMPLETE") {
+        if (value === "ONE_TIME") {
             setShowInstallmentPopup(false);
 
             setInstallment({
@@ -251,7 +251,7 @@ export default function Expense() {
 
         setForm((previous) => ({
             ...previous,
-            paymentType: "COMPLETE",
+            paymentType: "ONE_TIME",
         }));
 
         setInstallment({
@@ -260,6 +260,7 @@ export default function Expense() {
             remark: "",
         });
     };
+    
 
     // ---------------------------------------
     // SUBMIT
@@ -444,346 +445,7 @@ export default function Expense() {
         }
     };
 
-    // // -----------------------------
-    // // SUBMIT
-    // // -----------------------------
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-
-    //     try {
-    //         const requestData = {
-    //             contactId: Number(form.contactId),
-    //             type: form.type,
-    //             date: form.date,
-    //             categoryId: Number(form.categoryId),
-    //             particular: form.particular,
-    //             amount: Number(form.amount),
-
-    //             gstPercentage: hasGst
-    //                 ? Number(form.gstPercentage)
-    //                 : null,
-
-    //             gstNumber: hasGst
-    //                 ? form.gstNumber
-    //                 : null,
-
-    //             tdsPercentage: hasTds
-    //                 ? Number(form.tdsPercentage)
-    //                 : null,
-
-    //             total: Number(form.total),
-
-    //             paymentType: form.paymentType,
-
-    //             remark: form.remark,
-    //         };
-
-    //         console.log("Expense Request:", requestData);
-
-    //         const response = await api.post(
-    //             "/pjsofttech/expense",
-    //             requestData
-    //         );
-
-    //         console.log("Expense Response:", response.data);
-
-    //         alert("Transaction added successfully!");
-
-    //         // Reset form
-    //         setForm({
-    //             type: "EXPENSE",
-    //             contactId: "",
-    //             date: new Date().toISOString().split("T")[0],
-    //             categoryId: "",
-    //             particular: "",
-    //             amount: "",
-    //             gstPercentage: "",
-    //             gstNumber: "",
-    //             tdsPercentage: "",
-    //             total: 0,
-    //             paymentType: "COMPLETE",
-    //             remark: "",
-    //         });
-
-    //         setHasGst(false);
-    //         setHasTds(false);
-
-    //     } catch (error) {
-    //         console.error("Error adding expense:", error);
-
-    //         console.error(
-    //             "Backend response:",
-    //             error.response?.data
-    //         );
-
-    //         alert("Failed to add transaction");
-    //     }
-    // };
-
     return (
-        // <div className="expense-page">
-
-        //     <div className="expense-card">
-
-        //         <div className="expense-header">
-        //             <h1>Add Transaction</h1>
-        //             <p>Record a new income or expense</p>
-        //         </div>
-
-        //         <form onSubmit={handleSubmit}>
-
-        //             {/* TYPE */}
-        //             <div className="form-group">
-        //                 <label>Type</label>
-
-        //                 <select
-        //                     name="type"
-        //                     value={form.type}
-        //                     onChange={handleChange}
-        //                     required
-        //                 >
-        //                     <option value="EXPENSE">Expense</option>
-        //                     <option value="INCOME">Income</option>
-        //                 </select>
-        //             </div>
-
-        //             {/* CONTACT */}
-        //             <div className="form-group">
-        //                 <label>User / Contact</label>
-
-        //                 <select
-        //                     name="contactId"
-        //                     value={form.contactId}
-        //                     onChange={handleChange}
-        //                     required
-        //                 >
-        //                     <option value="">
-        //                         Select Contact
-        //                     </option>
-
-        //                     {contacts.map((contact) => (
-        //                         <option
-        //                             key={contact.id}
-        //                             value={contact.id}
-        //                         >
-        //                             {contact.name}
-        //                         </option>
-        //                     ))}
-        //                 </select>
-        //             </div>
-
-        //             {/* DATE */}
-        //             <div className="form-group">
-        //                 <label>Date</label>
-
-        //                 <input
-        //                     type="date"
-        //                     name="date"
-        //                     value={form.date}
-        //                     onChange={handleChange}
-        //                     required
-        //                 />
-        //             </div>
-
-        //             {/* CATEGORY */}
-        //             <div className="form-group">
-        //                 <label>Category</label>
-
-        //                 <select
-        //                     name="categoryId"
-        //                     value={form.categoryId}
-        //                     onChange={handleChange}
-        //                     required
-        //                 >
-        //                     <option value="">
-        //                         Select Category
-        //                     </option>
-
-        //                     {categories.map((category) => (
-        //                         <option
-        //                             key={category.id}
-        //                             value={category.id}
-        //                         >
-        //                             {category.name}
-        //                         </option>
-        //                     ))}
-        //                 </select>
-        //             </div>
-
-        //             {/* PARTICULAR */}
-        //             <div className="form-group">
-        //                 <label>Particular</label>
-
-        //                 <input
-        //                     type="text"
-        //                     name="particular"
-        //                     placeholder="Enter particular"
-        //                     value={form.particular}
-        //                     onChange={handleChange}
-        //                     required
-        //                 />
-        //             </div>
-
-        //             {/* AMOUNT */}
-        //             <div className="form-group">
-        //                 <label>Amount</label>
-
-        //                 <input
-        //                     type="number"
-        //                     name="amount"
-        //                     placeholder="Enter amount"
-        //                     min="0"
-        //                     value={form.amount}
-        //                     onChange={handleChange}
-        //                     required
-        //                 />
-        //             </div>
-
-        //             {/* GST */}
-        //             <div className="checkbox-section">
-
-        //                 <label className="checkbox-label">
-        //                     <input
-        //                         type="checkbox"
-        //                         checked={hasGst}
-        //                         onChange={handleGstChange}
-        //                     />
-
-        //                     <span>GST</span>
-        //                 </label>
-
-        //                 {hasGst && (
-        //                     <div className="conditional-fields">
-
-        //                         <div className="form-group">
-        //                             <label>GST Percentage (%)</label>
-
-        //                             <input
-        //                                 type="number"
-        //                                 name="gstPercentage"
-        //                                 placeholder="e.g. 18"
-        //                                 min="0"
-        //                                 max="100"
-        //                                 value={form.gstPercentage}
-        //                                 onChange={handleChange}
-        //                                 required
-        //                             />
-        //                         </div>
-
-        //                         <div className="form-group">
-        //                             <label>GST Number</label>
-
-        //                             <input
-        //                                 type="text"
-        //                                 name="gstNumber"
-        //                                 placeholder="Enter GST number"
-        //                                 value={form.gstNumber}
-        //                                 onChange={handleChange}
-        //                                 required
-        //                             />
-        //                         </div>
-
-        //                     </div>
-        //                 )}
-
-        //             </div>
-
-        //             {/* TDS */}
-        //             <div className="checkbox-section">
-
-        //                 <label className="checkbox-label">
-        //                     <input
-        //                         type="checkbox"
-        //                         checked={hasTds}
-        //                         onChange={handleTdsChange}
-        //                     />
-
-        //                     <span>TDS</span>
-        //                 </label>
-
-        //                 {hasTds && (
-        //                     <div className="conditional-fields">
-
-        //                         <div className="form-group">
-        //                             <label>TDS Percentage (%)</label>
-
-        //                             <input
-        //                                 type="number"
-        //                                 name="tdsPercentage"
-        //                                 placeholder="e.g. 10"
-        //                                 min="0"
-        //                                 max="100"
-        //                                 value={form.tdsPercentage}
-        //                                 onChange={handleChange}
-        //                                 required
-        //                             />
-        //                         </div>
-
-        //                     </div>
-        //                 )}
-
-        //             </div>
-
-        //             {/* TOTAL */}
-        //             <div className="total-section">
-
-        //                 <label>Total</label>
-
-        //                 <input
-        //                     type="number"
-        //                     value={form.total}
-        //                     readOnly
-        //                 />
-
-        //             </div>
-
-        //             {/* PAYMENT STATUS */}
-        //             <div className="form-group">
-        //                 <label>Payment Status</label>
-
-        //                 <select
-        //                     name="paymentType"
-        //                     value={form.paymentType}
-        //                     onChange={handleChange}
-        //                     required
-        //                 >
-        //                     <option value="COMPLETE">
-        //                         Fully Paid
-        //                     </option>
-
-        //                     <option value="INSTALLMENT">
-        //                         Installment
-        //                     </option>
-        //                 </select>
-        //             </div>
-
-
-        //             {/* REMARK */}
-        //             <div className="form-group">
-        //                 <label>Remark</label>
-
-        //                 <textarea
-        //                     name="remark"
-        //                     placeholder="Enter remark"
-        //                     value={form.remark}
-        //                     onChange={handleChange}
-        //                     rows="4"
-        //                 />
-        //             </div>
-
-        //             {/* SUBMIT */}
-        //             <button
-        //                 type="submit"
-        //                 className="submit-expense-button"
-        //             >
-        //                 Save Transaction
-        //             </button>
-
-        //         </form>
-
-        //     </div>
-
-        // </div>
         <div className="expense-page">
 
             <div className="expense-card">
@@ -793,7 +455,7 @@ export default function Expense() {
                 {/* -------------------------------- */}
 
                 <div className="expense-header">
-                    <h1>Add Transaction</h1>
+                    {/* <h1>Add Transaction</h1> */}
 
                     <p>
                         Record a new income or expense
@@ -802,351 +464,282 @@ export default function Expense() {
 
                 <form onSubmit={handleSubmit}>
 
-                    {/* -------------------------------- */}
-                    {/* TYPE */}
-                    {/* -------------------------------- */}
+                    {/* ROW 1 */}
+                    <div className="form-row">
 
-                    <div className="form-group">
-                        <label>Type</label>
+                        <div className="form-group">
+                            <label>Type</label>
 
-                        <select
-                            name="type"
-                            value={form.type}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="EXPENSE">
-                                Expense
-                            </option>
+                            <select
+                                name="type"
+                                value={form.type}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="EXPENSE">Expense</option>
+                                <option value="INCOME">Income</option>
+                            </select>
+                        </div>
 
-                            <option value="INCOME">
-                                Income
-                            </option>
-                        </select>
-                    </div>
+                        <div className="form-group">
+                            <label>User / Contact</label>
 
-                    {/* -------------------------------- */}
-                    {/* CONTACT */}
-                    {/* -------------------------------- */}
+                            <select
+                                name="contactId"
+                                value={form.contactId}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">
+                                    Select Contact
+                                </option>
 
-                    <div className="form-group">
-                        <label>
-                            User / Contact
-                        </label>
-
-                        <select
-                            name="contactId"
-                            value={form.contactId}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">
-                                Select Contact
-                            </option>
-
-                            {contacts.map(
-                                (contact) => (
+                                {contacts.map((contact) => (
                                     <option
-                                        key={
-                                            contact.id
-                                        }
-                                        value={
-                                            contact.id
-                                        }
+                                        key={contact.id}
+                                        value={contact.id}
                                     >
-                                        {
-                                            contact.name
-                                        }
+                                        {contact.name}
                                     </option>
-                                )
-                            )}
-                        </select>
+                                ))}
+                            </select>
+                        </div>
+
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* DATE */}
-                    {/* -------------------------------- */}
 
-                    <div className="form-group">
-                        <label>Date</label>
+                    {/* ROW 2 */}
+                    <div className="form-row">
 
-                        <input
-                            type="date"
-                            name="date"
-                            value={form.date}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* CATEGORY */}
-                    {/* -------------------------------- */}
-
-                    <div className="form-group">
-                        <label>Category</label>
-
-                        <select
-                            name="categoryId"
-                            value={form.categoryId}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">
-                                Select Category
-                            </option>
-
-                            {categories.map(
-                                (category) => (
-                                    <option
-                                        key={
-                                            category.id
-                                        }
-                                        value={
-                                            category.id
-                                        }
-                                    >
-                                        {
-                                            category.name
-                                        }
-                                    </option>
-                                )
-                            )}
-                        </select>
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* PARTICULAR */}
-                    {/* -------------------------------- */}
-
-                    <div className="form-group">
-                        <label>Particular</label>
-
-                        <input
-                            type="text"
-                            name="particular"
-                            placeholder="Enter particular"
-                            value={form.particular}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* AMOUNT */}
-                    {/* -------------------------------- */}
-
-                    <div className="form-group">
-                        <label>Amount</label>
-
-                        <input
-                            type="number"
-                            name="amount"
-                            placeholder="Enter amount"
-                            min="0"
-                            step="1"
-                            value={form.amount}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* GST */}
-                    {/* -------------------------------- */}
-
-                    <div className="checkbox-section">
-
-                        <label className="checkbox-label">
+                        <div className="form-group">
+                            <label>Date</label>
 
                             <input
-                                type="checkbox"
-                                checked={hasGst}
-                                onChange={
-                                    handleGstChange
-                                }
+                                type="date"
+                                name="date"
+                                value={form.date}
+                                onChange={handleChange}
+                                required
                             />
+                        </div>
 
-                            <span>GST</span>
+                        <div className="form-group">
+                            <label>Category</label>
 
-                        </label>
+                            <select
+                                name="categoryId"
+                                value={form.categoryId}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">
+                                    Select Category
+                                </option>
 
-                        {hasGst && (
-                            <div className="conditional-fields">
-
-                                <div className="form-group">
-
-                                    <label>
-                                        GST Percentage (%)
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        name="gstPercentage"
-                                        placeholder="e.g. 18"
-                                        min="0"
-                                        max="100"
-                                        step="0.01"
-                                        value={
-                                            form.gstPercentage
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        required
-                                    />
-
-                                </div>
-
-                                <div className="form-group">
-
-                                    <label>
-                                        GST Number
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        name="gstNumber"
-                                        placeholder="Enter GST number"
-                                        value={
-                                            form.gstNumber
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-
-                                    />
-
-                                </div>
-
-                            </div>
-                        )}
+                                {categories.map((category) => (
+                                    <option
+                                        key={category.id}
+                                        value={category.id}
+                                    >
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* TDS */}
-                    {/* -------------------------------- */}
 
-                    <div className="checkbox-section">
+                    {/* ROW 3 */}
+                    <div className="form-row">
 
-                        <label className="checkbox-label">
+                        <div className="form-group">
+                            <label>Particular</label>
 
                             <input
-                                type="checkbox"
-                                checked={hasTds}
-                                onChange={
-                                    handleTdsChange
-                                }
+                                type="text"
+                                name="particular"
+                                placeholder="Enter particular"
+                                value={form.particular}
+                                onChange={handleChange}
+                                required
                             />
+                        </div>
 
-                            <span>TDS</span>
+                        <div className="form-group">
+                            <label>Amount</label>
 
-                        </label>
+                            <input
+                                type="number"
+                                name="amount"
+                                placeholder="Enter amount"
+                                min="0"
+                                step="1"
+                                value={form.amount}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                        {hasTds && (
-                            <div className="conditional-fields">
+                    </div>
 
-                                <div className="form-group">
 
-                                    <label>
-                                        TDS Percentage (%)
-                                    </label>
+                    {/* GST + TDS */}
+                    <div className="tax-row">
 
-                                    <input
-                                        type="number"
-                                        name="tdsPercentage"
-                                        placeholder="e.g. 10"
-                                        min="0"
-                                        max="100"
-                                        step="0.01"
-                                        value={
-                                            form.tdsPercentage
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        required
-                                    />
+                        {/* GST */}
+                        <div className="checkbox-section">
+
+                            <label className="checkbox-label">
+
+                                <input
+                                    type="checkbox"
+                                    checked={hasGst}
+                                    onChange={handleGstChange}
+                                />
+
+                                <span>Apply GST</span>
+
+                            </label>
+
+                            {hasGst && (
+                                <div className="conditional-fields">
+
+                                    <div className="form-group">
+                                        <label>GST %</label>
+
+                                        <input
+                                            type="number"
+                                            name="gstPercentage"
+                                            placeholder="18"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            value={form.gstPercentage}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>GST Number</label>
+
+                                        <input
+                                            type="text"
+                                            name="gstNumber"
+                                            placeholder="GST number"
+                                            value={form.gstNumber}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
 
                                 </div>
+                            )}
 
+                        </div>
+
+
+                        {/* TDS */}
+                        <div className="checkbox-section">
+
+                            <label className="checkbox-label">
+
+                                <input
+                                    type="checkbox"
+                                    checked={hasTds}
+                                    onChange={handleTdsChange}
+                                />
+
+                                <span>Apply TDS</span>
+
+                            </label>
+
+                            {hasTds && (
+                                <div className="conditional-fields">
+
+                                    <div className="form-group">
+                                        <label>TDS %</label>
+
+                                        <input
+                                            type="number"
+                                            name="tdsPercentage"
+                                            placeholder="10"
+                                            min="0"
+                                            max="100"
+                                            step="0.01"
+                                            value={form.tdsPercentage}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+
+                                </div>
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    {/* ROW 5 */}
+                    <div className="form-row">
+
+                        {/* TOTAL */}
+                        <div className="total-section">
+
+                            <div>
+                                <span>Total Amount</span>
+
+                                <strong>
+                                    ₹{Number(form.total).toLocaleString("en-IN")}
+                                </strong>
                             </div>
-                        )}
+
+                        </div>
+
+
+                        {/* PAYMENT TYPE */}
+                        <div className="form-group">
+
+                            <label>Payment Type</label>
+
+                            <select
+                                name="paymentType"
+                                value={form.paymentType}
+                                onChange={handlePaymentTypeChange}
+                                required
+                            >
+                                <option value="ONE_TIME">
+                                    One Time Payment
+                                </option>
+
+                                <option value="INSTALLMENT">
+                                    Pay in Installments
+                                </option>
+                            </select>
+
+                        </div>
 
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* TOTAL */}
-                    {/* -------------------------------- */}
 
-                    <div className="total-section">
-
-                        <label>Total</label>
-
-                        <input
-                            type="number"
-                            value={form.total}
-                            readOnly
-                        />
-
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* PAYMENT STATUS */}
-                    {/* -------------------------------- */}
-
-                    <div className="form-group">
-
-                        <label>
-                            Payment Type
-                        </label>
-
-                        <select
-                            name="paymentType"
-                            value={
-                                form.paymentType
-                            }
-                            onChange={
-                                handlePaymentTypeChange
-                            }
-                            required
-                        >
-
-                            <option value="COMPLETE">
-                                One Time Pay
-                            </option>
-
-                            <option value="INSTALLMENT">
-                                Pay In Installment
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    {/* -------------------------------- */}
                     {/* REMARK */}
-                    {/* -------------------------------- */}
-
                     <div className="form-group">
 
                         <label>Remark</label>
 
                         <textarea
                             name="remark"
-                            placeholder="Enter remark"
+                            placeholder="Add an optional remark..."
                             value={form.remark}
                             onChange={handleChange}
-                            rows="4"
+                            rows="2"
                         />
 
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* SUBMIT */}
-                    {/* -------------------------------- */}
 
+                    {/* SUBMIT */}
                     <button
                         type="submit"
                         className="submit-expense-button"
@@ -1158,6 +751,7 @@ export default function Expense() {
                     </button>
 
                 </form>
+
 
             </div>
 
@@ -1306,7 +900,7 @@ export default function Expense() {
                         </div>
 
                         {/* PAYMENT REMARK */}
-                        <div className="form-group">
+                        {/* <div className="form-group">
 
                             <label>
                                 Payment Remark
@@ -1324,7 +918,7 @@ export default function Expense() {
                                 rows="3"
                             />
 
-                        </div>
+                        </div> */}
 
                         {/* BUTTONS */}
                         <div className="modal-actions">

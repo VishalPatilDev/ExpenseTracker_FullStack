@@ -1,11 +1,18 @@
 
 import React, { useEffect, useState } from "react";
 import api from "../api/api";
+import { useNavigate } from "react-router-dom";
 
 export default function List() {
     const [expenses, setExpenses] = useState([]);
     const [categories, setCategories] = useState([]);
     const [contacts, setContacts] = useState([]);
+
+
+    const navigate = useNavigate();
+
+    const [search, setSearch] = useState("");
+
 
     const [filters, setFilters] = useState({
         type: "",
@@ -186,6 +193,23 @@ export default function List() {
     };
 
     const filteredExpenses = expenses.filter((expense) => {
+        // Common search - Name OR Category
+        if (search.trim()) {
+            const searchText = search.toLowerCase().trim();
+
+            const contactName =
+                expense.contact?.name?.toLowerCase() || "";
+
+            const categoryName =
+                expense.category?.name?.toLowerCase() || "";
+
+            if (
+                !contactName.includes(searchText) &&
+                !categoryName.includes(searchText)
+            ) {
+                return false;
+            }
+        }
 
         // Type filter
         if (
@@ -249,7 +273,38 @@ export default function List() {
     return (
         <div className="list-page">
 
-            <h1>Expense List</h1>
+            {/* <h1>Expense List</h1> */}
+
+            <div className="list-header">
+
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Search by name or category..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+
+                    {search && (
+                        <button
+                            type="button"
+                            className="clear-search"
+                            onClick={() => setSearch("")}
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+
+                <button
+                    type="button"
+                    className="add-expense-btn"
+                    onClick={() => navigate("/expense")}
+                >
+                    + Add Expense
+                </button>
+
+            </div>
 
             {/* FILTER SECTION */}
             <div className="filter-container">
@@ -499,7 +554,7 @@ export default function List() {
                                         {expense.remark || "-"}
                                     </td>
                                     <td>
-                                        {expense.paymentType === "INSTALLMENT" && expense.paymentStatus !== "COMPLETE" &&(
+                                        {expense.paymentType === "INSTALLMENT" && expense.paymentStatus !== "COMPLETE" && (
                                             <button
                                                 onClick={() => openInstallmentModal(expense)}
                                             >

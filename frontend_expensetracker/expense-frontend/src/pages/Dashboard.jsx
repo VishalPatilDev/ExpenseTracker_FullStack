@@ -7,8 +7,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedYear, setSelectedYear] = useState(
-    new Date().getFullYear()
+    String(new Date().getFullYear())
   );
+
 
   useEffect(() => {
     fetchExpenses();
@@ -95,6 +96,34 @@ const Dashboard = () => {
       date <= today
     );
   };
+  // --------------------------------------------------
+  // AVAILABLE YEARS
+  // --------------------------------------------------
+
+  const availableYears = useMemo(() => {
+
+    const years = expenses
+      .map((item) => {
+        const date = getDate(item);
+
+        return date
+          ? date.getFullYear()
+          : null;
+      })
+      .filter(Boolean);
+
+    // Always include current year
+    const currentYear = new Date().getFullYear();
+
+    return [
+      ...new Set([
+        ...years,
+        currentYear
+      ])
+    ].sort((a, b) => a - b);
+
+  }, [expenses]);
+
 
   // --------------------------------------------------
   // CALCULATE PERIOD TOTAL
@@ -165,6 +194,7 @@ const Dashboard = () => {
         0
       );
   };
+
 
   // --------------------------------------------------
   // CARD VALUES
@@ -310,6 +340,7 @@ const Dashboard = () => {
 
         if (!date) return;
 
+        // Selected year
         if (
           date.getFullYear() !==
           Number(selectedYear)
@@ -317,8 +348,24 @@ const Dashboard = () => {
           return;
         }
 
+        // Selected month
         if (
           date.getMonth() !== index
+        ) {
+          return;
+        }
+
+        // Don't show future months
+        // for the current year
+        const currentYear =
+          new Date().getFullYear();
+
+        const currentMonth =
+          new Date().getMonth();
+
+        if (
+          Number(selectedYear) === currentYear &&
+          index > currentMonth
         ) {
           return;
         }
@@ -341,9 +388,11 @@ const Dashboard = () => {
         expense,
         saving: income - expense
       };
+
     });
 
   }, [expenses, selectedYear]);
+
 
   // --------------------------------------------------
   // FORMAT MONEY
@@ -360,6 +409,164 @@ const Dashboard = () => {
       }
     );
   };
+
+
+
+
+  // --------------------------------------------------
+  // YEARLY DATA
+  // --------------------------------------------------
+
+  const yearlyData = useMemo(() => {
+
+    return availableYears.map((year) => {
+
+      let income = 0;
+      let expense = 0;
+
+      expenses.forEach((item) => {
+
+        const date = getDate(item);
+
+        if (!date) return;
+
+        if (
+          date.getFullYear() !== year
+        ) {
+          return;
+        }
+
+        const amount = getAmount(item);
+
+        if (item.type === "INCOME") {
+          income += amount;
+        }
+
+        if (item.type === "EXPENSE") {
+          expense += amount;
+        }
+
+      });
+
+      return {
+        year,
+        income,
+        expense,
+        saving: income - expense
+      };
+
+    });
+
+  }, [expenses, availableYears]);
+
+  // --------------------------------------------------
+  // EXPENSE BY CATEGORY
+  // --------------------------------------------------
+
+  const categoryData = useMemo(() => {
+
+    const categoryMap = {};
+
+    expenses.forEach((item) => {
+
+      if (item.type !== "EXPENSE") {
+        return;
+      }
+      const date = getDate(item);
+
+      if (!date) {
+        return;
+      }
+
+      // Filter by selected year
+      if (
+        selectedYear !== "All" &&
+        date.getFullYear() !== Number(selectedYear)
+      ) {
+        return;
+      }
+
+      const amount = getAmount(item);
+
+      if (amount <= 0) {
+        return;
+      }
+
+      const categoryName =
+        item.category?.name || "Uncategorized";
+
+      if (!categoryMap[categoryName]) {
+        categoryMap[categoryName] = 0;
+      }
+
+      categoryMap[categoryName] += amount;
+
+    });
+
+    const totalExpense = Object.values(categoryMap)
+      .reduce((sum, amount) => sum + amount, 0);
+
+    const colors = [
+      "#4F46E5",
+      "#10B981",
+      "#F59E0B",
+      "#EF4444",
+      "#8B5CF6",
+      "#06B6D4",
+      "#EC4899",
+      "#84CC16",
+      "#F97316",
+      "#6366F1"
+    ];
+
+    return Object.entries(categoryMap)
+      .map(([category, amount], index) => ({
+        category,
+        amount,
+        percentage:
+          totalExpense > 0
+            ? (amount / totalExpense) * 100
+            : 0,
+        color: colors[index % colors.length]
+      }))
+      .sort((a, b) => b.amount - a.amount);
+
+  }, [expenses, selectedYear]);
+
+  const categoryExpenseTotal = useMemo(() => {
+
+    return categoryData.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+  }, [categoryData]);
+
+
+
+
+
+  // --------------------------------------------------
+  // YEARLY CHART MAX VALUE
+  // --------------------------------------------------
+
+  const yearlyChartMax = useMemo(() => {
+
+    const values = yearlyData.flatMap(
+      (item) => [
+        Math.abs(item.income),
+        Math.abs(item.expense),
+        Math.abs(item.saving)
+      ]
+    );
+
+    return Math.max(
+      ...values,
+      1
+    );
+
+  }, [yearlyData]);
+
 
   // --------------------------------------------------
   // CHART MAX VALUE
@@ -684,14 +891,15 @@ const Dashboard = () => {
 
       </div>
 
-
       {/* ============================= */}
-      {/* CHARTS */}
+      {/* CHARTS GRID (single grid, three sibling cards) */}
       {/* ============================= */}
 
       <div className="dashboard-chart-grid">
 
-        {/* BAR CHART */}
+        {/* ============================= */}
+        {/* 1. BAR CHART */}
+        {/* ============================= */}
 
         <div className="chart-card">
 
@@ -807,154 +1015,536 @@ const Dashboard = () => {
         </div>
 
 
-        {/* MONTHLY TREND */}
+        {/* ============================= */}
+        {/* 2. MONTHLY / YEARLY TRENDS */}
+        {/* ============================= */}
 
         <div className="chart-card">
+
+          {/* HEADER */}
 
           <div className="monthly-header">
 
             <div className="chart-title">
-              Monthly Trends
+              {selectedYear === "All"
+                ? "Yearly Trends"
+                : "Monthly Trends"}
             </div>
 
             <select
               value={selectedYear}
               onChange={(e) =>
-                setSelectedYear(
-                  Number(e.target.value)
-                )
+                setSelectedYear(e.target.value)
               }
             >
-              {[
-                selectedYear - 2,
-                selectedYear - 1,
-                selectedYear,
-                selectedYear + 1
-              ].map(year => (
+
+              {availableYears.map((year) => (
+
                 <option
                   key={year}
-                  value={year}
+                  value={String(year)}
                 >
                   {year}
                 </option>
+
               ))}
+
+              <option value="All">
+                All
+              </option>
+
             </select>
 
           </div>
 
-          <div className="chart-legend">
+          {/* ============================= */}
+          {/* ALL YEARS */}
+          {/* ============================= */}
 
-            <span>
-              <i className="legend loss"></i>
-              Loss
-            </span>
+          {selectedYear === "All" ? (
 
-            <span>
-              <i className="legend saving"></i>
-              Saving
-            </span>
+            <>
 
-            <span>
-              <i className="legend expense"></i>
-              Expense
-            </span>
+              <div className="chart-legend">
 
-            <span>
-              <i className="legend income"></i>
-              Income
-            </span>
+                <span>
+                  <i className="legend income"></i>
+                  Income
+                </span>
 
-          </div>
+                <span>
+                  <i className="legend expense"></i>
+                  Expense
+                </span>
 
-          <div className="trend-chart">
+                <span>
+                  <i className="legend saving"></i>
+                  Saving
+                </span>
 
-            <div className="trend-grid">
+                <span>
+                  <i className="legend loss"></i>
+                  Loss
+                </span>
 
-              {monthlyData.map(item => {
+              </div>
 
-                const incomeHeight =
-                  (item.income /
-                    chartMax) *
-                  100;
 
-                const expenseHeight =
-                  (item.expense /
-                    chartMax) *
-                  100;
+              <div className="bar-chart yearly-bar-chart">
 
-                const savingHeight =
-                  Math.abs(
-                    item.saving
-                  ) /
-                  chartMax *
-                  100;
+                {yearlyData.map((item) => (
 
-                return (
                   <div
-                    className="trend-column"
-                    key={item.month}
+                    className="bar-group"
+                    key={item.year}
                   >
 
-                    <div className="trend-area">
+                    <div className="bars">
+
+                      {/* INCOME */}
 
                       <div
-                        className="trend-point income-point"
+                        className="bar income-bar"
                         style={{
-                          bottom:
-                            `${Math.min(
-                              incomeHeight,
-                              100
-                            )}%`
+                          height: `${Math.max(
+                            (item.income /
+                              yearlyChartMax) *
+                            100,
+                            item.income > 0
+                              ? 3
+                              : 0
+                          )}%`
                         }}
                         title={`Income ₹${formatAmount(
                           item.income
                         )}`}
                       />
 
+
+                      {/* EXPENSE */}
+
                       <div
-                        className="trend-point expense-point"
+                        className="bar expense-bar"
                         style={{
-                          bottom:
-                            `${Math.min(
-                              expenseHeight,
-                              100
-                            )}%`
+                          height: `${Math.max(
+                            (item.expense /
+                              yearlyChartMax) *
+                            100,
+                            item.expense > 0
+                              ? 3
+                              : 0
+                          )}%`
                         }}
                         title={`Expense ₹${formatAmount(
                           item.expense
                         )}`}
                       />
 
+
+                      {/* SAVING / LOSS */}
+
                       <div
-                        className="trend-point saving-point"
+                        className={
+                          `bar ${item.saving >= 0
+                            ? "saving-bar"
+                            : "loss-bar"
+                          }`
+                        }
                         style={{
-                          bottom:
-                            `${Math.min(
-                              savingHeight,
-                              100
-                            )}%`
+                          height: `${Math.max(
+                            (
+                              Math.abs(
+                                item.saving
+                              ) /
+                              yearlyChartMax
+                            ) *
+                            100,
+                            item.saving !== 0
+                              ? 3
+                              : 0
+                          )}%`
                         }}
-                        title={`Saving ₹${formatAmount(
-                          item.saving
-                        )}`}
+                        title={`${item.saving >= 0
+                          ? "Saving"
+                          : "Loss"
+                          } ₹${formatAmount(
+                            Math.abs(
+                              item.saving
+                            )
+                          )}`}
                       />
 
                     </div>
 
-                    <span>
-                      {item.month}
+
+                    {/* YEAR */}
+
+                    <span className="month-label">
+                      {item.year}
                     </span>
 
                   </div>
-                );
 
-              })}
+                ))}
+
+              </div>
+
+
+              {/* YEARLY SUMMARY */}
+
+              <div className="yearly-summary">
+
+                {yearlyData.map((item) => (
+
+                  <div
+                    className="year-summary-card"
+                    key={item.year}
+                  >
+
+                    <h4>
+                      {item.year}
+                    </h4>
+
+                    <div className="summary-row">
+
+                      <span>
+                        Income
+                      </span>
+
+                      <strong className="income-text">
+                        ₹{formatAmount(
+                          item.income
+                        )}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="summary-row">
+
+                      <span>
+                        Expense
+                      </span>
+
+                      <strong className="expense-text">
+                        ₹{formatAmount(
+                          item.expense
+                        )}
+                      </strong>
+
+                    </div>
+
+
+                    <div className="summary-row">
+
+                      <span>
+                        {item.saving >= 0
+                          ? "Saving"
+                          : "Loss"}
+                      </span>
+
+                      <strong
+                        className={
+                          item.saving >= 0
+                            ? "positive"
+                            : "negative"
+                        }
+                      >
+                        ₹{formatAmount(
+                          Math.abs(
+                            item.saving
+                          )
+                        )}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </>
+
+          ) : (
+
+            /* ============================= */
+            /* SELECTED YEAR */
+            /* ============================= */
+
+            <>
+
+              <div className="chart-legend">
+
+                <span>
+                  <i className="legend loss"></i>
+                  Loss
+                </span>
+
+                <span>
+                  <i className="legend saving"></i>
+                  Saving
+                </span>
+
+                <span>
+                  <i className="legend expense"></i>
+                  Expense
+                </span>
+
+                <span>
+                  <i className="legend income"></i>
+                  Income
+                </span>
+
+              </div>
+
+
+              <div className="trend-chart">
+
+                <div className="trend-grid">
+
+                  {monthlyData.map((item) => {
+
+                    const incomeHeight =
+                      (item.income /
+                        chartMax) *
+                      100;
+
+                    const expenseHeight =
+                      (item.expense /
+                        chartMax) *
+                      100;
+
+                    const savingHeight =
+                      Math.abs(
+                        item.saving
+                      ) /
+                      chartMax *
+                      100;
+
+                    return (
+
+                      <div
+                        className="trend-column"
+                        key={item.month}
+                      >
+
+                        <div className="trend-area">
+
+                          {/* INCOME */}
+
+                          <div
+                            className="trend-point income-point"
+                            style={{
+                              bottom:
+                                `${Math.min(
+                                  incomeHeight,
+                                  100
+                                )}%`
+                            }}
+                            title={`Income ₹${formatAmount(
+                              item.income
+                            )}`}
+                          />
+
+
+                          {/* EXPENSE */}
+
+                          <div
+                            className="trend-point expense-point"
+                            style={{
+                              bottom:
+                                `${Math.min(
+                                  expenseHeight,
+                                  100
+                                )}%`
+                            }}
+                            title={`Expense ₹${formatAmount(
+                              item.expense
+                            )}`}
+                          />
+
+
+                          {/* SAVING */}
+
+                          <div
+                            className={
+                              `trend-point ${item.saving >= 0
+                                ? "saving-point"
+                                : "loss-point"
+                              }`
+                            }
+                            style={{
+                              bottom:
+                                `${Math.min(
+                                  savingHeight,
+                                  100
+                                )}%`
+                            }}
+                            title={`${item.saving >= 0
+                              ? "Saving"
+                              : "Loss"
+                              } ₹${formatAmount(
+                                Math.abs(
+                                  item.saving
+                                )
+                              )}`}
+                          />
+
+                        </div>
+
+
+                        <span>
+                          {item.month}
+                        </span>
+
+                      </div>
+
+                    );
+
+                  })}
+
+                </div>
+
+              </div>
+
+            </>
+
+          )}
+
+        </div>
+
+        {/* ============================= */}
+        {/* 3. EXPENSE BY CATEGORY */}
+        {/* ============================= */}
+
+        <div className="chart-card category-chart-card">
+
+          <div className="chart-title">
+            Expense by Category
+          </div>
+
+          {categoryData.length === 0 ? (
+
+            <div className="no-category-data">
+              No expense data available
+            </div>
+
+          ) : (
+
+            <div className="category-chart-container">
+
+              {/* ============================= */}
+              {/* DONUT */}
+              {/* ============================= */}
+
+              <div className="donut-wrapper">
+
+                <div
+                  className="donut-chart"
+                  style={{
+                    background: (() => {
+
+                      let currentPercentage = 0;
+
+                      const gradients =
+                        categoryData.map((item) => {
+
+                          const start =
+                            currentPercentage;
+
+                          const end =
+                            currentPercentage +
+                            item.percentage;
+
+                          currentPercentage = end;
+
+                          return `${item.color} ${start}% ${end}%`;
+
+                        });
+
+                      return `conic-gradient(
+                  ${gradients.join(", ")}
+                )`;
+
+                    })()
+                  }}
+                >
+
+                  <div className="donut-center">
+
+                    <span>
+                      Total Expense
+                    </span>
+
+                    <strong>
+                      ₹{formatAmount(
+                        categoryExpenseTotal
+                      )}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              {/* ============================= */}
+              {/* CATEGORY LEGEND */}
+              {/* ============================= */}
+
+              <div className="category-list">
+
+                {categoryData.map((item) => (
+
+                  <div
+                    className="category-item"
+                    key={item.category}
+                  >
+
+                    <div className="category-info">
+
+                      <span
+                        className="category-color"
+                        style={{
+                          backgroundColor:
+                            item.color
+                        }}
+                      />
+
+                      <span className="category-name">
+                        {item.category}
+                      </span>
+
+                    </div>
+
+                    <div className="category-values">
+
+                      <strong>
+                        ₹{formatAmount(
+                          item.amount
+                        )}
+                      </strong>
+
+                      <span>
+                        {item.percentage.toFixed(1)}%
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
 
             </div>
 
-          </div>
-
+          )}
         </div>
+
 
       </div>
 
