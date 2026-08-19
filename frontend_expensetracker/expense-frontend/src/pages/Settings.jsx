@@ -1,596 +1,1412 @@
-import React, { useEffect, useState } from 'react'
-import api from '../api/api';
-import deletebutton from '../assets/delete-icon.jpg'
-import { FaTrash } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import api from "../api/api";
+import { FaTrash, FaPencil } from "react-icons/fa6";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const emptyContact = {
+    name: "",
+    phoneNumber: "",
+    email: "",
+};
+
+const emptyBank = {
+    name: "",
+    branch: "",
+    accountNumber: "",
+};
 
 const Settings = () => {
-
     const [activeTab, setActiveTab] = useState("contacts");
 
     const [contacts, setContacts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [banks, setBanks] = useState([]);
 
-    const [showContactForm, setShowContactForm] = useState(false);
-    const [showCategoryForm, setShowCategoryForm] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    const [contact, setContact] = useState({
-        name: "",
-        phoneNumber: "",
-        email: "",
-    });
+    // -----------------------------
+    // CONTACT
+    // -----------------------------
 
-    const [editingContactId, setEditingContactId] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
+    const [contact, setContact] = useState(emptyContact);
 
-    const [categoryName, setCategoryName] = useState("");
+    const [showContactForm, setShowContactForm] =
+        useState(false);
 
-    const handleEdit = (item) => {
-        setEditingContactId(item.id);
+    const [editingContactId, setEditingContactId] =
+        useState(null);
 
-        setContact({
-            name: item.name,
-            phoneNumber: item.phoneNumber,
-            email: item.email,
+    // -----------------------------
+    // CATEGORY
+    // -----------------------------
+
+    const [categoryName, setCategoryName] =
+        useState("");
+
+    const [showCategoryForm, setShowCategoryForm] =
+        useState(false);
+
+    // -----------------------------
+    // BANK
+    // -----------------------------
+
+    const [bank, setBank] = useState(emptyBank);
+
+    const [showBankForm, setShowBankForm] =
+        useState(false);
+
+    // -----------------------------
+    // DELETE DIALOG
+    // -----------------------------
+
+    const [deleteDialog, setDeleteDialog] =
+        useState({
+            open: false,
+            type: null,
+            id: null,
+            name: "",
         });
 
-        setIsEditing(true);
-        setShowContactForm(true);
-    };
-
-    const updateContact = async (e) => {
-        e.preventDefault();
-
-        try {
-            const response = await api.put(
-                `/pjsofttech/user/${editingContactId}`,
-                {
-                    name: contact.name,
-                    phoneNumber: contact.phoneNumber,
-                    email: contact.email,
-                }
-            );
-
-            alert("Contact updated successfully");
-
-            // Update the table immediately
-            setContacts((prevContacts) =>
-                prevContacts.map((item) =>
-                    item.id === response.data.id
-                        ? response.data
-                        : item
-                )
-            );
-
-            // Reset form
-            setContact({
-                name: "",
-                phoneNumber: "",
-                email: "",
-            });
-
-            setEditingContactId(null);
-            setIsEditing(false);
-            setShowContactForm(false);
-
-        } catch (error) {
-            console.error("Error updating contact:", error);
-
-            alert(
-                error.response?.data?.message ||
-                "Failed to update contact"
-            );
-        }
-    };
-
+    // -----------------------------
+    // FETCH DATA
+    // -----------------------------
 
     useEffect(() => {
         fetchContacts();
         fetchCategories();
+        fetchBanks();
     }, []);
 
-    // -----------------------------
-    // GET CONTACTS
-    // -----------------------------
     const fetchContacts = async () => {
         try {
-            const response = await api.get("/pjsofttech/user/users");
+            const response = await api.get(
+                "/pjsofttech/user/users"
+            );
 
-            setContacts(response.data);
+            setContacts(response.data || []);
         } catch (error) {
-            console.error("Error fetching contacts:", error);
+            console.error(
+                "Error fetching contacts:",
+                error
+            );
         }
     };
 
-    // -----------------------------
-    // GET CATEGORIES
-    // -----------------------------
     const fetchCategories = async () => {
         try {
-            const response = await api.get("/pjsofttech/category");
+            const response = await api.get(
+                "/pjsofttech/category"
+            );
 
-            setCategories(response.data);
+            setCategories(response.data || []);
         } catch (error) {
-            console.error("Error fetching categories:", error);
+            console.error(
+                "Error fetching categories:",
+                error
+            );
+        }
+    };
+
+    const fetchBanks = async () => {
+        try {
+            const response = await api.get(
+                "/pjsofttech/bank"
+            );
+
+            setBanks(response.data || []);
+        } catch (error) {
+            console.error(
+                "Error fetching banks:",
+                error
+            );
         }
     };
 
     // -----------------------------
-    // ADD CONTACT
+    // CONTACT
     // -----------------------------
-    const addContact = async (e) => {
+
+    const handleEditContact = (item) => {
+        setEditingContactId(item.id);
+
+        setContact({
+            name: item.name || "",
+            phoneNumber: item.phoneNumber || "",
+            email: item.email || "",
+        });
+
+        setShowContactForm(true);
+    };
+
+    const handleContactSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            await api.post("/pjsofttech/user", contact);
+            setLoading(true);
 
-            alert("Contact added successfully");
+            if (editingContactId) {
+                const response = await api.put(
+                    `/pjsofttech/user/${editingContactId}`,
+                    contact
+                );
 
-            setContact({
-                name: "",
-                phoneNumber: "",
-                email: "",
-            });
+                setContacts((previous) =>
+                    previous.map((item) =>
+                        item.id === response.data.id
+                            ? response.data
+                            : item
+                    )
+                );
 
-            setShowContactForm(false);
+                alert(
+                    "Contact updated successfully"
+                );
+            } else {
+                const response = await api.post(
+                    "/pjsofttech/user",
+                    contact
+                );
 
-            fetchContacts();
-        } catch (error) {
-            console.error("Error adding contact:", error);
-            alert("Failed to add contact");
-        }
-    };
+                setContacts((previous) => [
+                    ...previous,
+                    response.data,
+                ]);
 
-    //Delete Contact
-    const deleteContact = async (id) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this contact?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await api.delete(`/pjsofttech/user/${id}`);
-
-            alert("Contact deleted successfully");
-
-            // Remove deleted contact from UI immediately
-            setContacts((prevContacts) =>
-                prevContacts.filter((item) => item.id !== id)
-            );
-
-            // If the deleted contact was being edited, reset the form
-            if (editingContactId === id) {
-                setEditingContactId(null);
-                setIsEditing(false);
-                setShowContactForm(false);
-
-                setContact({
-                    name: "",
-                    phoneNumber: "",
-                    email: "",
-                });
+                alert(
+                    "Contact added successfully"
+                );
             }
 
+            resetContactForm();
         } catch (error) {
-            console.error("Error deleting contact:", error);
+            console.error(
+                "Contact error:",
+                error
+            );
 
             alert(
                 error.response?.data?.message ||
-                "Failed to delete contact"
+                "Failed to save contact"
             );
-        }
-    };
-    // DELETE CATEGORY
-    const deleteCategory = async (id) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this category?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await api.delete(`/pjsofttech/category/${id}`);
-
-            alert("Category deleted successfully");
-
-            // Remove category immediately from UI
-            setCategories((prevCategories) =>
-                prevCategories.filter((item) => item.id !== id)
-            );
-
-        } catch (error) {
-            console.error("Error deleting category:", error);
-
-            alert(
-                error.response?.data?.message ||
-                "Failed to delete category"
-            );
+        } finally {
+            setLoading(false);
         }
     };
 
-
+    const resetContactForm = () => {
+        setContact(emptyContact);
+        setEditingContactId(null);
+        setShowContactForm(false);
+    };
 
     // -----------------------------
-    // ADD CATEGORY
+    // CATEGORY
     // -----------------------------
+
     const addCategory = async (e) => {
         e.preventDefault();
 
         try {
-            await api.post("/pjsofttech/category", {
-                name: categoryName,
-            });
+            setLoading(true);
 
-            alert("Category added successfully");
+            const response = await api.post(
+                "/pjsofttech/category",
+                {
+                    name: categoryName,
+                }
+            );
+
+            setCategories((previous) => [
+                ...previous,
+                response.data,
+            ]);
+
+            alert(
+                "Category added successfully"
+            );
 
             setCategoryName("");
             setShowCategoryForm(false);
-
-            fetchCategories();
         } catch (error) {
-            console.error("Error adding category:", error);
-            alert("Failed to add category");
+            console.error(
+                "Error adding category:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to add category"
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
     // -----------------------------
-    // CHANGE TAB
+    // BANK
     // -----------------------------
-    const handleTabChange = (tab) => {
-        setActiveTab(tab);
 
-        setShowContactForm(false);
-        setShowCategoryForm(false);
+    const addBank = async (e) => {
+        e.preventDefault();
+
+        try {
+            setLoading(true);
+
+            const response = await api.post(
+                "/pjsofttech/bank",
+                bank
+            );
+
+            setBanks((previous) => [
+                ...previous,
+                response.data,
+            ]);
+
+            alert("Bank added successfully");
+
+            setBank(emptyBank);
+            setShowBankForm(false);
+        } catch (error) {
+            console.error(
+                "Error adding bank:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to add bank"
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
+    // -----------------------------
+    // DELETE
+    // -----------------------------
+
+    const openDeleteDialog = (
+        type,
+        id,
+        name
+    ) => {
+        setDeleteDialog({
+            open: true,
+            type,
+            id,
+            name,
+        });
+    };
+
+    const closeDeleteDialog = () => {
+        setDeleteDialog({
+            open: false,
+            type: null,
+            id: null,
+            name: "",
+        });
+    };
+
+    const confirmDelete = async () => {
+        const {
+            type,
+            id,
+        } = deleteDialog;
+
+        try {
+            setLoading(true);
+
+            if (type === "contact") {
+                await api.delete(
+                    `/pjsofttech/user/${id}`
+                );
+
+                setContacts((previous) =>
+                    previous.filter(
+                        (item) => item.id !== id
+                    )
+                );
+
+                if (editingContactId === id) {
+                    resetContactForm();
+                }
+
+                alert(
+                    "Contact deleted successfully"
+                );
+            }
+
+            if (type === "category") {
+                await api.delete(
+                    `/pjsofttech/category/${id}`
+                );
+
+                setCategories((previous) =>
+                    previous.filter(
+                        (item) => item.id !== id
+                    )
+                );
+
+                alert(
+                    "Category deleted successfully"
+                );
+            }
+
+            if (type === "bank") {
+                await api.delete(
+                    `/pjsofttech/bank/${id}`
+                );
+
+                setBanks((previous) =>
+                    previous.filter(
+                        (item) => item.id !== id
+                    )
+                );
+
+                alert(
+                    "Bank deleted successfully"
+                );
+            }
+
+            closeDeleteDialog();
+        } catch (error) {
+            console.error(
+                "Delete error:",
+                error
+            );
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to delete"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="settings-container">
+        <div className="min-h-screen bg-muted/40 p-4 md:p-6 lg:p-8">
 
-            {/* LEFT SIDEBAR */}
-            <div className="settings-sidebar">
+            <div className="mx-auto max-w-7xl space-y-6">
 
-                <button
-                    className={activeTab === "contacts" ? "active" : ""}
-                    onClick={() => handleTabChange("contacts")}
-                >
-                    Users
-                </button>
+                {/* HEADER */}
 
-                <button
-                    className={activeTab === "categories" ? "active" : ""}
-                    onClick={() => handleTabChange("categories")}
-                >
-                    Categories
-                </button>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        Settings
+                    </h1>
 
-            </div>
+                    <p className="text-sm text-muted-foreground">
+                        Manage users, categories and
+                        bank accounts
+                    </p>
+                </div>
 
-            {/* RIGHT CONTENT */}
-            <div className="settings-content">
-                {/* ================= CONTACTS ================= */}
-                {activeTab === "contacts" && (
-                    <div>
-                        <div className="settings-header">
-                            <h2>Users</h2>
-                            
-                            <button
-                                className="add-button"
-                                onClick={() => setShowContactForm(!showContactForm)}
+                {/* SETTINGS CARD */}
+
+                <Card>
+
+                    <CardHeader>
+                        <CardTitle>
+                            Manage Data
+                        </CardTitle>
+                    </CardHeader>
+
+                    <CardContent>
+
+                        <Tabs
+                            value={activeTab}
+                            onValueChange={(value) => {
+                                setActiveTab(value);
+
+                                setShowContactForm(false);
+                                setShowCategoryForm(false);
+                                setShowBankForm(false);
+                            }}
+                        >
+
+                            {/* TAB NAVIGATION */}
+
+                            <TabsList className="grid w-full max-w-md grid-cols-3">
+
+                                <TabsTrigger value="contacts">
+                                    Users
+                                </TabsTrigger>
+
+                                <TabsTrigger value="categories">
+                                    Categories
+                                </TabsTrigger>
+
+                                <TabsTrigger value="banks">
+                                    Banks
+                                </TabsTrigger>
+
+                            </TabsList>
+
+                            {/* ================================================= */}
+                            {/* CONTACTS */}
+                            {/* ================================================= */}
+
+                            <TabsContent
+                                value="contacts"
+                                className="mt-6 space-y-4"
                             >
-                                + Add User
-                            </button>
-                            
-                        </div>
-                        <p>click on particular user to edit</p>
 
-                        {/* CONTACT FORM */}
-                        {showContactForm && (
-                            <form className="form-card contact-form" onSubmit={isEditing ? updateContact : addContact}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-                                <input className="name-input"
-                                    type="text"
-                                    placeholder="Name"
-                                    value={contact.name}
-                                    onChange={(e) =>
-                                        setContact({
-                                            ...contact,
-                                            name: e.target.value,
-                                        })
-                                    }
-                                    required
-                                />
+                                    <div>
+                                        <h2 className="text-lg font-semibold">
+                                            Users
+                                        </h2>
 
-                                <input className="phoneNumber-input"
-                                    type="text"
-                                    placeholder="Phone Number"
-                                    value={contact.phoneNumber}
-                                    onChange={(e) =>
-                                        setContact({
-                                            ...contact,
-                                            phoneNumber: e.target.value,
-                                        })
-                                    }
-                                    required
-                                />
+                                        <p className="text-sm text-muted-foreground">
+                                            Click a user to edit
+                                        </p>
+                                    </div>
 
-                                <input className="email-input"
-                                    type="email"
-                                    placeholder="Email"
-                                    value={contact.email}
-                                    onChange={(e) =>
-                                        setContact({
-                                            ...contact,
-                                            email: e.target.value,
-                                        })
-                                    }
-                                    required
-                                />
-
-                                <div className="form-buttons">
-                                    <button type="submit" className="save-button">
-                                        {isEditing ? "Update" : "Save"}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="cancel-button"
+                                    <Button
                                         onClick={() => {
-                                            setShowContactForm(false);
-                                            setIsEditing(false);
-                                            setEditingContactId(null);
-
-                                            setContact({
-                                                name: "",
-                                                phoneNumber: "",
-                                                email: "",
-                                            });
+                                            if (
+                                                showContactForm
+                                            ) {
+                                                resetContactForm();
+                                            } else {
+                                                setShowContactForm(
+                                                    true
+                                                );
+                                            }
                                         }}
                                     >
-                                        Cancel
-                                    </button>
+                                        + Add User
+                                    </Button>
+
                                 </div>
 
-                            </form>
-                        )}
-                        <div className="table-container">
+                                {/* CONTACT FORM */}
 
-                            {contacts.length === 0 ? (
-                                <p className="empty-message">
-                                    No contacts found.
-                                </p>
-                            ) : (
+                                <Dialog
+                                    open={
+                                        showContactForm
+                                    }
+                                    onOpenChange={(
+                                        open
+                                    ) => {
+                                        if (!open) {
+                                            resetContactForm();
+                                        }
+                                    }}
+                                >
 
-                                <table>
+                                    <DialogContent>
 
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>PhoneNumber</th>
-                                            <th>Email</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                        <DialogHeader>
 
-                                        {contacts.map((item, index) => (
-                                            <tr key={item.id}
-                                                onClick={() => handleEdit(item)}
-                                                className="clickable-row"
-                                            >
-                                                <td>{item.id}</td>
+                                            <DialogTitle>
+                                                {editingContactId
+                                                    ? "Edit User"
+                                                    : "Add User"}
+                                            </DialogTitle>
 
-                                                <td>
-                                                    {item.name}
-                                                </td>
+                                        </DialogHeader>
 
+                                        <form
+                                            onSubmit={
+                                                handleContactSubmit
+                                            }
+                                            className="space-y-4"
+                                        >
 
-                                                <td>
-                                                    {item.phoneNumber}
-                                                </td>
+                                            <div className="space-y-2">
+                                                <Label>
+                                                    Name
+                                                </Label>
 
-                                                <td>
-                                                    {item.email}
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        className="delete-button delete-button-hover"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteContact(item.id);
-                                                        }}
-                                                    >
-                                                        <FaTrash></FaTrash>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                                <Input
+                                                    value={
+                                                        contact.name
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setContact(
+                                                            {
+                                                                ...contact,
+                                                                name: e
+                                                                    .target
+                                                                    .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="Enter name"
+                                                    required
+                                                />
+                                            </div>
 
-                                        ))}
+                                            <div className="space-y-2">
+                                                <Label>
+                                                    Phone Number
+                                                </Label>
 
-                                    </tbody>
+                                                <Input
+                                                    value={
+                                                        contact.phoneNumber
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setContact(
+                                                            {
+                                                                ...contact,
+                                                                phoneNumber:
+                                                                    e
+                                                                        .target
+                                                                        .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="Enter phone number"
+                                                    required
+                                                />
+                                            </div>
 
-                                </table>
+                                            <div className="space-y-2">
+                                                <Label>
+                                                    Email
+                                                </Label>
 
-                            )}
+                                                <Input
+                                                    type="email"
+                                                    value={
+                                                        contact.email
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setContact(
+                                                            {
+                                                                ...contact,
+                                                                email: e
+                                                                    .target
+                                                                    .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="Enter email"
+                                                    required
+                                                />
+                                            </div>
 
-                        </div>
+                                            <div className="flex justify-end gap-2 pt-2">
 
-                        {/* CONTACT LIST */}
-                        {/* <div className="list-container">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={
+                                                        resetContactForm
+                                                    }
+                                                >
+                                                    Cancel
+                                                </Button>
 
-                            {contacts.length === 0 ? (
-                                <p className="empty-message">
-                                    No contacts found.
-                                </p>
-                            ) : (
-                                contacts.map((item, index) => (
-                                    <div className="list-item" key={index}>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        loading
+                                                    }
+                                                >
+                                                    {loading
+                                                        ? "Saving..."
+                                                        : editingContactId
+                                                            ? "Update"
+                                                            : "Save"}
+                                                </Button>
 
-                                        <div>
-                                            <strong>{item.name}</strong>
+                                            </div>
 
-                                            <p>
-                                                {item.phoneNumber}
-                                            </p>
+                                        </form>
 
-                                            <p>
-                                                {item.email}
-                                            </p>
+                                    </DialogContent>
+
+                                </Dialog>
+
+                                {/* CONTACT TABLE */}
+
+                                <Card>
+
+                                    <CardContent className="p-0">
+
+                                        <div className="overflow-x-auto">
+
+                                            <Table>
+
+                                                <TableHeader>
+                                                    <TableRow>
+
+                                                        <TableHead>
+                                                            ID
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Name
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Phone
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Email
+                                                        </TableHead>
+
+                                                        <TableHead className="text-right">
+                                                            Action
+                                                        </TableHead>
+
+                                                    </TableRow>
+                                                </TableHeader>
+
+                                                <TableBody>
+
+                                                    {contacts.length ===
+                                                    0 ? (
+                                                        <TableRow>
+                                                            <TableCell
+                                                                colSpan={
+                                                                    5
+                                                                }
+                                                                className="h-24 text-center text-muted-foreground"
+                                                            >
+                                                                No users found.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        contacts.map(
+                                                            (
+                                                                item
+                                                            ) => (
+                                                                <TableRow
+                                                                    key={
+                                                                        item.id
+                                                                    }
+                                                                    className="cursor-pointer hover:bg-muted/50"
+                                                                    onClick={() =>
+                                                                        handleEditContact(
+                                                                            item
+                                                                        )
+                                                                    }
+                                                                >
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.id
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="font-medium">
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.phoneNumber
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.email
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="text-right">
+
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+
+                                                                                openDeleteDialog(
+                                                                                    "contact",
+                                                                                    item.id,
+                                                                                    item.name
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <FaTrash className="h-4 w-4" />
+                                                                        </Button>
+
+                                                                    </TableCell>
+
+                                                                </TableRow>
+                                                            )
+                                                        )
+                                                    )}
+
+                                                </TableBody>
+
+                                            </Table>
+
                                         </div>
 
-                                    </div>
-                                ))
-                            )}
+                                    </CardContent>
 
-                        </div> */}
-                    </div>
-                )}
+                                </Card>
 
-                {/* ================= CATEGORIES ================= */}
-                {activeTab === "categories" && (
-                    <div>
+                            </TabsContent>
 
-                        <div className="settings-header">
-                            <h2>Categories</h2>
+                            {/* ================================================= */}
+                            {/* CATEGORIES */}
+                            {/* ================================================= */}
 
-                            <button
-                                className="add-button"
-                                onClick={() =>
-                                    setShowCategoryForm(!showCategoryForm)
-                                }
+                            <TabsContent
+                                value="categories"
+                                className="mt-6 space-y-4"
                             >
-                                + Add Category
-                            </button>
-                        </div>
 
-                        {/* CATEGORY FORM */}
-                        {showCategoryForm && (
-                            <form className="form-card" onSubmit={addCategory}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-                                <input
-                                    type="text"
-                                    placeholder="Category Name"
-                                    value={categoryName}
-                                    onChange={(e) =>
-                                        setCategoryName(e.target.value)
-                                    }
-                                    required
-                                />
+                                    <div>
+                                        <h2 className="text-lg font-semibold">
+                                            Categories
+                                        </h2>
 
-                                <div className="form-buttons">
+                                        <p className="text-sm text-muted-foreground">
+                                            Manage expense categories
+                                        </p>
+                                    </div>
 
-                                    <button
-                                        type="submit"
-                                        className="save-button"
-                                    >
-                                        Save Category
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="cancel-button"
+                                    <Button
                                         onClick={() =>
-                                            setShowCategoryForm(false)
+                                            setShowCategoryForm(
+                                                true
+                                            )
                                         }
                                     >
-                                        Cancel
-                                    </button>
+                                        + Add Category
+                                    </Button>
 
                                 </div>
 
-                            </form>
-                        )}
-                        <div className="table-container">
+                                {/* CATEGORY FORM */}
 
-                            {categories.length === 0 ? (
-                                <p className="empty-message">
-                                    No categories found.
-                                </p>
-                            ) : (
+                                <Dialog
+                                    open={
+                                        showCategoryForm
+                                    }
+                                    onOpenChange={
+                                        setShowCategoryForm
+                                    }
+                                >
 
-                                <table>
+                                    <DialogContent>
 
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Name</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                                        <DialogHeader>
 
-                                        {categories.map((item, index) => (
+                                            <DialogTitle>
+                                                Add Category
+                                            </DialogTitle>
 
-                                            <tr key={item.id}>
+                                        </DialogHeader>
 
-                                                <td>
-                                                    {item.id}
-                                                </td>
+                                        <form
+                                            onSubmit={
+                                                addCategory
+                                            }
+                                            className="space-y-4"
+                                        >
 
+                                            <div className="space-y-2">
 
-                                                <td>
-                                                    {item.name}
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        type="button"
-                                                        className="delete-button delete-button-hover"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteCategory(item.id)
+                                                <Label>
+                                                    Category Name
+                                                </Label>
 
-                                                        }}
-                                                    >
-                                                        <FaTrash></FaTrash>
-                                                    </button>
-                                                </td>
+                                                <Input
+                                                    value={
+                                                        categoryName
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setCategoryName(
+                                                            e
+                                                                .target
+                                                                .value
+                                                        )
+                                                    }
+                                                    placeholder="e.g. Food"
+                                                    required
+                                                />
 
+                                            </div>
 
-                                            </tr>
+                                            <div className="flex justify-end gap-2">
 
-                                        ))}
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setCategoryName(
+                                                            ""
+                                                        );
+                                                        setShowCategoryForm(
+                                                            false
+                                                        );
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </Button>
 
-                                    </tbody>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        loading
+                                                    }
+                                                >
+                                                    {loading
+                                                        ? "Saving..."
+                                                        : "Save Category"}
+                                                </Button>
 
-                                </table>
+                                            </div>
 
-                            )}
+                                        </form>
 
-                        </div>
+                                    </DialogContent>
 
-                        {/* CATEGORY LIST */}
-                        {/* <div className="list-container">
+                                </Dialog>
 
-                            {categories.length === 0 ? (
-                                <p className="empty-message">
-                                    No categories found.
-                                </p>
-                            ) : (
-                                categories.map((item, index) => (
-                                    <div
-                                        className="list-item category-item"
-                                        key={index}
-                                    >
-                                        {item.name}
+                                {/* CATEGORY TABLE */}
+
+                                <Card>
+
+                                    <CardContent className="p-0">
+
+                                        <div className="overflow-x-auto">
+
+                                            <Table>
+
+                                                <TableHeader>
+
+                                                    <TableRow>
+
+                                                        <TableHead>
+                                                            ID
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Name
+                                                        </TableHead>
+
+                                                        <TableHead className="text-right">
+                                                            Action
+                                                        </TableHead>
+
+                                                    </TableRow>
+
+                                                </TableHeader>
+
+                                                <TableBody>
+
+                                                    {categories.length ===
+                                                    0 ? (
+                                                        <TableRow>
+                                                            <TableCell
+                                                                colSpan={
+                                                                    3
+                                                                }
+                                                                className="h-24 text-center text-muted-foreground"
+                                                            >
+                                                                No categories found.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        categories.map(
+                                                            (
+                                                                item
+                                                            ) => (
+                                                                <TableRow
+                                                                    key={
+                                                                        item.id
+                                                                    }
+                                                                >
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.id
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="font-medium">
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="text-right">
+
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                            onClick={() =>
+                                                                                openDeleteDialog(
+                                                                                    "category",
+                                                                                    item.id,
+                                                                                    item.name
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <FaTrash />
+                                                                        </Button>
+
+                                                                    </TableCell>
+
+                                                                </TableRow>
+                                                            )
+                                                        )
+                                                    )}
+
+                                                </TableBody>
+
+                                            </Table>
+
+                                        </div>
+
+                                    </CardContent>
+
+                                </Card>
+
+                            </TabsContent>
+
+                            {/* ================================================= */}
+                            {/* BANKS */}
+                            {/* ================================================= */}
+
+                            <TabsContent
+                                value="banks"
+                                className="mt-6 space-y-4"
+                            >
+
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                                    <div>
+                                        <h2 className="text-lg font-semibold">
+                                            Banks
+                                        </h2>
+
+                                        <p className="text-sm text-muted-foreground">
+                                            Manage your bank accounts
+                                        </p>
                                     </div>
-                                ))
-                            )}
 
-                        </div> */}
+                                    <Button
+                                        onClick={() =>
+                                            setShowBankForm(
+                                                true
+                                            )
+                                        }
+                                    >
+                                        + Add Bank
+                                    </Button>
 
-                    </div>
-                )}
+                                </div>
+
+                                {/* BANK FORM */}
+
+                                <Dialog
+                                    open={
+                                        showBankForm
+                                    }
+                                    onOpenChange={(
+                                        open
+                                    ) => {
+                                        setShowBankForm(
+                                            open
+                                        );
+
+                                        if (!open) {
+                                            setBank(
+                                                emptyBank
+                                            );
+                                        }
+                                    }}
+                                >
+
+                                    <DialogContent>
+
+                                        <DialogHeader>
+
+                                            <DialogTitle>
+                                                Add Bank
+                                            </DialogTitle>
+
+                                        </DialogHeader>
+
+                                        <form
+                                            onSubmit={
+                                                addBank
+                                            }
+                                            className="space-y-4"
+                                        >
+
+                                            <div className="space-y-2">
+
+                                                <Label>
+                                                    Bank Name
+                                                </Label>
+
+                                                <Input
+                                                    value={
+                                                        bank.name
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setBank(
+                                                            {
+                                                                ...bank,
+                                                                name: e
+                                                                    .target
+                                                                    .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="e.g. HDFC Bank"
+                                                    required
+                                                />
+
+                                            </div>
+
+                                            <div className="space-y-2">
+
+                                                <Label>
+                                                    Branch
+                                                </Label>
+
+                                                <Input
+                                                    value={
+                                                        bank.branch
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setBank(
+                                                            {
+                                                                ...bank,
+                                                                branch: e
+                                                                    .target
+                                                                    .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="Branch name"
+                                                    required
+                                                />
+
+                                            </div>
+
+                                            <div className="space-y-2">
+
+                                                <Label>
+                                                    Account Number
+                                                </Label>
+
+                                                <Input
+                                                    value={
+                                                        bank.accountNumber
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        setBank(
+                                                            {
+                                                                ...bank,
+                                                                accountNumber:
+                                                                    e
+                                                                        .target
+                                                                        .value,
+                                                            }
+                                                        )
+                                                    }
+                                                    placeholder="Account number"
+                                                    required
+                                                />
+
+                                            </div>
+
+                                            <div className="flex justify-end gap-2">
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setBank(
+                                                            emptyBank
+                                                        );
+                                                        setShowBankForm(
+                                                            false
+                                                        );
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </Button>
+
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        loading
+                                                    }
+                                                >
+                                                    {loading
+                                                        ? "Saving..."
+                                                        : "Save Bank"}
+                                                </Button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </DialogContent>
+
+                                </Dialog>
+
+                                {/* BANK TABLE */}
+
+                                <Card>
+
+                                    <CardContent className="p-0">
+
+                                        <div className="overflow-x-auto">
+
+                                            <Table>
+
+                                                <TableHeader>
+
+                                                    <TableRow>
+
+                                                        <TableHead>
+                                                            ID
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Bank Name
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Branch
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Account Number
+                                                        </TableHead>
+
+                                                        <TableHead className="text-right">
+                                                            Action
+                                                        </TableHead>
+
+                                                    </TableRow>
+
+                                                </TableHeader>
+
+                                                <TableBody>
+
+                                                    {banks.length ===
+                                                    0 ? (
+                                                        <TableRow>
+                                                            <TableCell
+                                                                colSpan={
+                                                                    5
+                                                                }
+                                                                className="h-24 text-center text-muted-foreground"
+                                                            >
+                                                                No banks found.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        banks.map(
+                                                            (
+                                                                item
+                                                            ) => (
+                                                                <TableRow
+                                                                    key={
+                                                                        item.id
+                                                                    }
+                                                                >
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.id
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="font-medium">
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.branch
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell>
+                                                                        {
+                                                                            item.accountNumber
+                                                                        }
+                                                                    </TableCell>
+
+                                                                    <TableCell className="text-right">
+
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                            onClick={() =>
+                                                                                openDeleteDialog(
+                                                                                    "bank",
+                                                                                    item.id,
+                                                                                    item.name
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <FaTrash />
+                                                                        </Button>
+
+                                                                    </TableCell>
+
+                                                                </TableRow>
+                                                            )
+                                                        )
+                                                    )}
+
+                                                </TableBody>
+
+                                            </Table>
+
+                                        </div>
+
+                                    </CardContent>
+
+                                </Card>
+
+                            </TabsContent>
+
+                        </Tabs>
+
+                    </CardContent>
+
+                </Card>
 
             </div>
 
-        </div>
-    )
-}
+            {/* ================================================= */}
+            {/* DELETE CONFIRMATION */}
+            {/* ================================================= */}
 
-export default Settings
+            <AlertDialog
+                open={deleteDialog.open}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        closeDeleteDialog();
+                    }
+                }}
+            >
+
+                <AlertDialogContent>
+
+                    <AlertDialogHeader>
+
+                        <AlertDialogTitle>
+                            Are you sure?
+                        </AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                            This will permanently delete{" "}
+                            <strong>
+                                {deleteDialog.name}
+                            </strong>
+                            . This action cannot be
+                            undone.
+                        </AlertDialogDescription>
+
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+
+                        <AlertDialogCancel>
+                            Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={
+                                confirmDelete
+                            }
+                        >
+                            Delete
+                        </AlertDialogAction>
+
+                    </AlertDialogFooter>
+
+                </AlertDialogContent>
+
+            </AlertDialog>
+
+        </div>
+    );
+};
+
+export default Settings;

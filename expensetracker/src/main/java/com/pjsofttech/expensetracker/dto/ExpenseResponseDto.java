@@ -1,31 +1,117 @@
 package com.pjsofttech.expensetracker.dto;
 
-import com.pjsofttech.expensetracker.model.*;
-import lombok.Builder;
-import lombok.Data;
+import com.pjsofttech.expensetracker.model.PaymentMethod;
+import com.pjsofttech.expensetracker.model.PaymentStatus;
+import com.pjsofttech.expensetracker.model.PaymentType;
+import com.pjsofttech.expensetracker.model.TransactionType;
+import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ExpenseResponseDto {
     private Long id;
     private Integer index;
+
     private LocalDate date;
+    private TransactionType type;
+    private String particular;
+    private String remark;
+
     private ContactResponseDto contact;
     private CategoryResponseDto category;
-    private String particular;
-    private Long amount;
-    private Long gstPercentage;
-    private Long gstAmount;
-    private String gstNumber;
-    private Long tdsPercentage;
-    private Long total;
-    private Long paid;
-    private Long pending;
-    private TransactionType type; //INCOME,EXPENSE
-    private PaymentType paymentType; //COMPLETE,INSTALLMENT
-    private PaymentStatus paymentStatus; //PENDING, PARTIAL, COMPLETE
-//    private PaymentMethod paymentMethod;
-    private String remark;
+    private Long bankId;
+
+    private BigDecimal amount;
+    private BigDecimal gstPercentage;
+    private BigDecimal gstNumber;         // kept as BigDecimal? No — String
+    private String gstNumberStr;
+    private BigDecimal gstAmount;
+    private BigDecimal tdsPercentage;
+    private BigDecimal tdsAmount;
+    private BigDecimal total;
+
+    /** Sum of all payments across all installments (or total for ONE_TIME). */
+    private BigDecimal paid;
+
+    /** total - paid */
+    private BigDecimal pending;
+
+    private PaymentType paymentType;
+    private PaymentMethod paymentMethod;
+    private PaymentStatus paymentStatus;
+
+    private Integer numberOfInstallments;
+
+    /** Populated only for INSTALLMENT expenses. */
+    private List<InstallmentResponseDto> installments;
 }
+//package com.pjsofttech.expensetracker.dto;
+//
+//import com.pjsofttech.expensetracker.model.PaymentMethod;
+//import com.pjsofttech.expensetracker.model.PaymentStatus;
+//import com.pjsofttech.expensetracker.model.PaymentType;
+//import com.pjsofttech.expensetracker.model.TransactionType;
+//import lombok.Builder;
+//import lombok.Data;
+//
+//import java.time.LocalDate;
+//import java.time.LocalDateTime;
+//import java.util.List;
+//
+//@Data
+//@Builder
+//public class ExpenseResponseDto {
+//
+//    private Long id;
+//
+//    private Integer index;
+//
+//    private LocalDate date;
+//
+//    private TransactionType type;
+//
+//    private ContactResponseDto contact;
+//
+//    private CategoryResponseDto category;
+//    private Long bankId;
+//
+//    private String particular;
+//
+//    private Long amount;
+//
+//    private Long gstPercentage;
+//
+//    private String gstNumber;
+//
+//    private Long gstAmount;
+//
+//    private Long tdsPercentage;
+//
+//    private Long total;
+//
+//    private Long paid;
+//
+//    private Long pending;
+//
+//    private PaymentType paymentType;
+//
+//    private PaymentStatus paymentStatus;
+//
+//    private PaymentMethod paymentMethod;
+//
+//    private String remark;
+//
+//    // --------------------------------
+//    // INSTALLMENT SCHEDULE
+//    // Populated for INSTALLMENT type expenses
+//    // --------------------------------
+//
+//    private List<InstallmentResponseDto> installments;
+//}

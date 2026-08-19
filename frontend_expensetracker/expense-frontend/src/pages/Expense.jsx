@@ -1,21 +1,702 @@
+// import { useEffect, useState } from "react";
+// import api from "../api/api";
+
+// import {
+//     Card,
+//     CardContent,
+//     CardHeader,
+//     CardTitle,
+// } from "@/components/ui/card";
+
+// import TransactionForm from "@/components/transactions/TransactionForm";
+// import InstallmentModal from "@/components/transactions/InstallmentModel";
+
+// const getTodayDate = () => {
+//     const today = new Date();
+
+//     return `${today.getFullYear()}-${String(
+//         today.getMonth() + 1
+//     ).padStart(2, "0")}-${String(today.getDate()).padStart(
+//         2,
+//         "0"
+//     )}`;
+// };
+// const getTodayDateTime = () => {
+//     const now = new Date();
+
+//     return `${now.getFullYear()}-${String(
+//         now.getMonth() + 1
+//     ).padStart(2, "0")}-${String(
+//         now.getDate()
+//     ).padStart(2, "0")}T${String(
+//         now.getHours()
+//     ).padStart(2, "0")}:${String(
+//         now.getMinutes()
+//     ).padStart(2, "0")}:${String(
+//         now.getSeconds()
+//     ).padStart(2, "0")}`;
+// };
+
+// // --------------------------------
+// // EMPTY EXPENSE FORM
+// // --------------------------------
+
+// const getEmptyForm = () => ({
+//     type: "EXPENSE",
+//     contactId: "",
+//     date: getTodayDate(),
+//     categoryId: "",
+//     bankId: "",
+//     particular: "",
+//     amount: "",
+//     gstPercentage: "",
+//     gstNumber: "",
+//     tdsPercentage: "",
+//     total: 0,
+//     paymentType: "ONE_TIME",
+//     remark: "",
+// });
+
+// // --------------------------------
+// // EMPTY INSTALLMENT
+// // --------------------------------
+
+// const getEmptyInstallment = (number = 1) => ({
+//     installmentNumber: number,
+//     dueAmount: "",
+//     dueDate: getTodayDate(),
+// });
+
+// export default function Expense() {
+//     const [contacts, setContacts] = useState([]);
+//     const [categories, setCategories] = useState([]);
+//     const [banks, setBanks] = useState([]);
+
+//     const [form, setForm] = useState(getEmptyForm());
+
+//     const [hasGst, setHasGst] = useState(false);
+//     const [hasTds, setHasTds] = useState(false);
+
+//     // --------------------------------
+//     // INSTALLMENT STATE
+//     // --------------------------------
+
+//     const [numberOfInstallments, setNumberOfInstallments] =
+//         useState(2);
+
+//     const [installments, setInstallments] = useState([
+//         getEmptyInstallment(1),
+//         getEmptyInstallment(2),
+//     ]);
+
+//     const [showInstallmentPopup, setShowInstallmentPopup] =
+//         useState(false);
+
+//     const [submitting, setSubmitting] = useState(false);
+
+//     // --------------------------------
+//     // FETCH DATA
+//     // --------------------------------
+
+//     useEffect(() => {
+//         fetchData();
+//     }, []);
+
+//     const fetchData = async () => {
+//         try {
+//             const [
+//                 contactsResponse,
+//                 categoriesResponse,
+//                 banksResponse,
+//             ] = await Promise.all([
+//                 api.get("/pjsofttech/user/users"),
+//                 api.get("/pjsofttech/category"),
+//                 api.get("/pjsofttech/bank"),
+//             ]);
+
+//             setContacts(contactsResponse.data);
+//             setCategories(categoriesResponse.data);
+//             setBanks(banksResponse.data);
+//         } catch (error) {
+//             console.error("Error fetching data:", error);
+//         }
+//     };
+
+//     // --------------------------------
+//     // FORM CHANGE
+//     // --------------------------------
+
+//     const handleChange = (name, value) => {
+//         setForm((prev) => ({
+//             ...prev,
+//             [name]: value,
+//         }));
+//     };
+
+//     // --------------------------------
+//     // CALCULATE TOTAL
+//     // --------------------------------
+
+//     useEffect(() => {
+//         const amount = Number(form.amount) || 0;
+
+//         const gst = hasGst
+//             ? Number(form.gstPercentage) || 0
+//             : 0;
+
+//         const tds = hasTds
+//             ? Number(form.tdsPercentage) || 0
+//             : 0;
+
+//         const total =
+//             amount +
+//             (amount * gst) / 100 -
+//             (amount * tds) / 100;
+
+//         setForm((prev) => {
+//             if (prev.total === total) {
+//                 return prev;
+//             }
+
+//             return {
+//                 ...prev,
+//                 total,
+//             };
+//         });
+//     }, [
+//         form.amount,
+//         form.gstPercentage,
+//         form.tdsPercentage,
+//         hasGst,
+//         hasTds,
+//     ]);
+
+//     // --------------------------------
+//     // GST
+//     // --------------------------------
+
+//     const handleGstChange = (checked) => {
+//         setHasGst(checked);
+
+//         if (!checked) {
+//             setForm((prev) => ({
+//                 ...prev,
+//                 gstPercentage: "",
+//                 gstNumber: "",
+//             }));
+//         }
+//     };
+
+//     // --------------------------------
+//     // TDS
+//     // --------------------------------
+
+//     const handleTdsChange = (checked) => {
+//         setHasTds(checked);
+
+//         if (!checked) {
+//             setForm((prev) => ({
+//                 ...prev,
+//                 tdsPercentage: "",
+//             }));
+//         }
+//     };
+
+//     // --------------------------------
+//     // GENERATE INSTALLMENTS
+//     // --------------------------------
+
+//     const generateInstallments = (count) => {
+//         const number = Number(count);
+
+//         if (!number || number <= 0) {
+//             setInstallments([]);
+//             return;
+//         }
+
+//         const newInstallments = Array.from(
+//             { length: number },
+//             (_, index) => getEmptyInstallment(index + 1)
+//         );
+
+//         setInstallments(newInstallments);
+//     };
+
+//     // --------------------------------
+//     // PAYMENT TYPE
+//     // --------------------------------
+
+//     const handlePaymentTypeChange = (value) => {
+//         setForm((prev) => ({
+//             ...prev,
+//             paymentType: value,
+//         }));
+
+//         if (value === "INSTALLMENT") {
+//             const defaultCount = 1;
+
+//             setNumberOfInstallments(defaultCount);
+
+//             generateInstallments(defaultCount);
+
+//             setShowInstallmentPopup(true);
+//         } else {
+//             setShowInstallmentPopup(false);
+
+//             setNumberOfInstallments(2);
+
+//             setInstallments([
+//                 getEmptyInstallment(1),
+//                 getEmptyInstallment(2),
+//             ]);
+//         }
+//     };
+
+//     // --------------------------------
+//     // INSTALLMENT CHANGE
+//     // --------------------------------
+
+//     const handleInstallmentChange = (
+//         index,
+//         field,
+//         value
+//     ) => {
+//         // --------------------------------
+//         // REPLACE ENTIRE INSTALLMENT ARRAY
+//         // --------------------------------
+
+//         if (index === "replace") {
+//             setInstallments(
+//                 Array.isArray(field)
+//                     ? field
+//                     : []
+//             );
+
+//             return;
+//         }
+
+//         // --------------------------------
+//         // UPDATE SINGLE INSTALLMENT FIELD
+//         // --------------------------------
+
+//         setInstallments((prev) =>
+//             prev.map((installment, i) =>
+//                 i === index
+//                     ? {
+//                         ...installment,
+//                         [field]: value,
+//                     }
+//                     : installment
+//             )
+//         );
+//     };
+
+
+//     // --------------------------------
+//     // CONFIRM INSTALLMENT PLAN
+//     // --------------------------------
+
+//     const handleConfirmInstallment = () => {
+//         const total = Number(form.total) || 0;
+
+//         const count = Number(numberOfInstallments);
+
+//         if (!count || count <= 0) {
+//             alert(
+//                 "Number of installments must be greater than zero."
+//             );
+//             return;
+//         }
+
+//         if (installments.length !== count) {
+//             alert(
+//                 "Please create a valid installment schedule."
+//             );
+//             return;
+//         }
+
+//         // Validate every installment
+//         for (const installment of installments) {
+//             if (
+//                 !installment.dueAmount ||
+//                 Number(installment.dueAmount) <= 0
+//             ) {
+//                 alert(
+//                     `Please enter amount for installment ${installment.installmentNumber}.`
+//                 );
+//                 return;
+//             }
+
+//             if (!installment.dueDate) {
+//                 alert(
+//                     `Please select due date for installment ${installment.installmentNumber}.`
+//                 );
+//                 return;
+//             }
+//         }
+
+//         // Calculate schedule total
+//         const scheduleTotal = installments.reduce(
+//             (sum, installment) =>
+//                 sum + Number(installment.dueAmount || 0),
+//             0
+//         );
+
+//         // Important:
+//         // schedule must exactly equal expense total
+//         if (Math.abs(scheduleTotal - total) > 0.01) {
+
+
+//             alert(
+//                 `Installment amounts must equal total amount.\n\n` +
+//                 `Total: ₹${total.toLocaleString("en-IN")}\n` +
+//                 `Scheduled: ₹${scheduleTotal.toLocaleString(
+//                     "en-IN"
+//                 )}`
+//             );
+
+//             return;
+//         }
+
+//         // Close popup only after everything is valid
+//         setShowInstallmentPopup(false);
+//     };
+
+//     // --------------------------------
+//     // CANCEL INSTALLMENT
+//     // --------------------------------
+
+//     const handleCancelInstallment = () => {
+//         setShowInstallmentPopup(false);
+
+//         setForm((prev) => ({
+//             ...prev,
+//             paymentType: "ONE_TIME",
+//         }));
+
+//         setNumberOfInstallments(2);
+
+//         setInstallments([
+//             getEmptyInstallment(1),
+//             getEmptyInstallment(2),
+//         ]);
+//     };
+
+//     // --------------------------------
+//     // SUBMIT
+//     // --------------------------------
+
+//     const handleSubmit = async (e) => {
+//         e.preventDefault();
+
+//         // -----------------------------
+//         // BASIC VALIDATION
+//         // -----------------------------
+
+//         if (!form.contactId) {
+//             alert("Please select a contact.");
+//             return;
+//         }
+
+//         if (!form.categoryId) {
+//             alert("Please select a category.");
+//             return;
+//         }
+
+//         if (!form.bankId) {
+//             alert("Please select a bank.");
+//             return;
+//         }
+
+//         if (!form.amount || Number(form.amount) <= 0) {
+//             alert("Amount must be greater than zero.");
+//             return;
+//         }
+
+//         // -----------------------------
+//         // INSTALLMENT VALIDATION
+//         // -----------------------------
+
+//         if (form.paymentType === "INSTALLMENT") {
+//             const count = Number(numberOfInstallments);
+//             const total = Number(form.total);
+
+//             if (!count || count <= 0) {
+//                 alert(
+//                     "Number of installments must be greater than zero."
+//                 );
+
+//                 setShowInstallmentPopup(true);
+//                 return;
+//             }
+
+//             if (installments.length !== count) {
+//                 alert(
+//                     "Please create a valid installment schedule."
+//                 );
+
+//                 setShowInstallmentPopup(true);
+//                 return;
+//             }
+
+//             for (const installment of installments) {
+//                 if (
+//                     !installment.dueAmount ||
+//                     Number(installment.dueAmount) <= 0
+//                 ) {
+//                     alert(
+//                         `Invalid amount for installment ${installment.installmentNumber}.`
+//                     );
+
+//                     setShowInstallmentPopup(true);
+//                     return;
+//                 }
+
+//                 if (!installment.dueDate) {
+//                     alert(
+//                         `Please select due date for installment ${installment.installmentNumber}.`
+//                     );
+
+//                     setShowInstallmentPopup(true);
+//                     return;
+//                 }
+//             }
+
+//             const scheduleTotal = installments.reduce(
+//                 (sum, installment) =>
+//                     sum +
+//                     Number(installment.dueAmount || 0),
+//                 0
+//             );
+
+//             if (Math.abs(scheduleTotal - total) > 0.01) {
+
+//                 alert(
+//                     "Installment amounts must equal total amount."
+//                 );
+
+//                 setShowInstallmentPopup(true);
+//                 return;
+//             }
+//         }
+
+//         // -----------------------------
+//         // REQUEST
+//         // -----------------------------
+
+//         try {
+//             setSubmitting(true);
+
+//             const requestData = {
+//                 contactId: Number(form.contactId),
+
+//                 type: form.type,
+
+//                 date: form.date,
+
+//                 categoryId: Number(form.categoryId),
+
+//                 bankId: Number(form.bankId),
+
+//                 particular: form.particular,
+
+//                 amount: Number(form.amount),
+
+//                 gstPercentage: hasGst
+//                     ? Number(form.gstPercentage)
+//                     : null,
+
+//                 gstNumber: hasGst
+//                     ? form.gstNumber
+//                     : null,
+
+//                 tdsPercentage: hasTds
+//                     ? Number(form.tdsPercentage)
+//                     : null,
+
+//                 total: Number(form.total),
+
+//                 paymentType: form.paymentType,
+
+//                 remark: form.remark,
+//             };
+
+//             // -----------------------------
+//             // INSTALLMENT PLAN
+//             // -----------------------------
+
+//             if (
+//                 form.paymentType === "INSTALLMENT"
+//             ) {
+//                 requestData.numberOfInstallments =
+//                     Number(numberOfInstallments);
+
+//                 requestData.installments =
+//                     installments.map(
+//                         (installment) => ({
+//                             installmentNumber:
+//                                 Number(
+//                                     installment.installmentNumber
+//                                 ),
+
+//                             dueAmount:
+//                                 Number(
+//                                     installment.dueAmount
+//                                 ),
+
+//                             dueDate:
+//                                 installment.dueDate,
+//                         })
+//                     );
+//             }
+
+//             console.log(
+//                 "Expense Request:",
+//                 requestData
+//             );
+
+//             // -----------------------------
+//             // API
+//             // -----------------------------
+
+//             await api.post(
+//                 "/pjsofttech/expense",
+//                 requestData
+//             );
+
+//             alert(
+//                 "Transaction added successfully!"
+//             );
+
+//             // -----------------------------
+//             // RESET
+//             // -----------------------------
+
+//             setForm(getEmptyForm());
+
+//             setHasGst(false);
+
+//             setHasTds(false);
+
+//             setNumberOfInstallments(2);
+
+//             setInstallments([
+//                 getEmptyInstallment(1),
+//                 getEmptyInstallment(2),
+//             ]);
+
+//             setShowInstallmentPopup(false);
+//         } catch (error) {
+//             console.error(
+//                 "Expense submit error:",
+//                 error
+//             );
+
+//             alert(
+//                 error.response?.data?.message ||
+//                 error.response?.data?.error ||
+//                 "Failed to add transaction"
+//             );
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     // --------------------------------
+//     // UI
+//     // --------------------------------
+
+//     return (
+//         <div className="p-6">
+//             <Card className="mx-auto max-w-5xl shadow-2xl">
+//                 <CardHeader>
+//                     <CardTitle>
+//                         Add Transaction
+//                     </CardTitle>
+
+//                     <p className="text-sm text-muted-foreground">
+//                         Record a new income or expense
+//                     </p>
+//                 </CardHeader>
+
+//                 <CardContent>
+//                     <TransactionForm
+//                         form={form}
+//                         contacts={contacts}
+//                         categories={categories}
+//                         banks={banks}
+//                         hasGst={hasGst}
+//                         hasTds={hasTds}
+//                         submitting={submitting}
+//                         onChange={handleChange}
+//                         onGstChange={handleGstChange}
+//                         onTdsChange={handleTdsChange}
+//                         onPaymentTypeChange={
+//                             handlePaymentTypeChange
+//                         }
+//                         onSubmit={handleSubmit}
+//                     />
+//                 </CardContent>
+//             </Card>
+
+//             <InstallmentModal
+//                 open={showInstallmentPopup}
+//                 total={form.total}
+//                 numberOfInstallments={
+//                     numberOfInstallments
+//                 }
+//                 setNumberOfInstallments={
+//                     (value) => {
+//                         setNumberOfInstallments(
+//                             Number(value)
+//                         );
+//                     }
+//                 }
+//                 installments={installments}
+//                 onInstallmentChange={
+//                     handleInstallmentChange
+//                 }
+//                 onConfirm={
+//                     handleConfirmInstallment
+//                 }
+//                 onCancel={
+//                     handleCancelInstallment
+//                 }
+//             />
+//         </div>
+//     );
+// }
 import { useEffect, useState } from "react";
 import api from "../api/api";
-// import "./Expense.css";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import TransactionForm  from "@/components/transactions/TransactionForm";
+// import InstallmentModal from "@/components/transactions/InstallmentModal";
+import TransactionForm from "@/components/transactions/TransactionForm";
+import InstallmentModal from "@/components/transactions/InstallmentModel";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 
 const getTodayDate = () => {
-    const today = new Date();
-
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
+    const d = new Date();
+    return [
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2, "0"),
+        String(d.getDate()).padStart(2, "0"),
+    ].join("-");
 };
-const getEmptyForm = () => ({
+
+/** Convert to integer paise (avoids float issues). */
+const toPaise = (v) => Math.round(Number(v || 0) * 100);
+
+const emptyForm = () => ({
     type: "EXPENSE",
     contactId: "",
     date: getTodayDate(),
     categoryId: "",
+    bankId: "",
     particular: "",
     amount: "",
     gstPercentage: "",
@@ -23,934 +704,274 @@ const getEmptyForm = () => ({
     tdsPercentage: "",
     total: 0,
     paymentType: "ONE_TIME",
+    paymentMethod: "UPI",
     remark: "",
 });
 
+const emptyInstallment = (n) => ({
+    installmentNumber: n,
+    dueAmount: "",
+    dueDate: getTodayDate(),
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function Expense() {
     const [contacts, setContacts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [banks, setBanks] = useState([]);
 
-    const [form, setForm] = useState(getEmptyForm());
-
+    const [form, setForm] = useState(emptyForm());
     const [hasGst, setHasGst] = useState(false);
     const [hasTds, setHasTds] = useState(false);
-
-    // ---------------------------------------
-    // INSTALLMENT POPUP
-    // ---------------------------------------
-    const [showInstallmentPopup, setShowInstallmentPopup] =
-        useState(false);
-
-    const [installment, setInstallment] = useState({
-        amount: "",
-        date: getTodayDate(),
-        remark: "",
-    });
     const [submitting, setSubmitting] = useState(false);
 
-    // ---------------------------------------
-    // FETCH INITIAL DATA
-    // ---------------------------------------
-    useEffect(() => {
-        fetchContacts();
-        fetchCategories();
-    }, []);
-
-    // -----------------------------
-    // GET CONTACTS
-    // -----------------------------
-    const fetchContacts = async () => {
-        try {
-            const response = await api.get("/pjsofttech/user/users");
-
-            setContacts(response.data);
-        } catch (error) {
-            console.error("Error fetching contacts:", error);
-        }
-    };
-
-    // -----------------------------
-    // GET CATEGORIES
-    // -----------------------------
-    const fetchCategories = async () => {
-        try {
-            const response = await api.get("/pjsofttech/category");
-
-            setCategories(response.data);
-        } catch (error) {
-            console.error("Error fetching categories:", error);
-        }
-    };
-
-    // -----------------------------
-    // HANDLE FORM INPUT
-    // -----------------------------
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        setForm((previous) => ({
-            ...previous,
-            [name]: value,
-        }));
-    };
-
-    // -----------------------------
-    // CALCULATE TOTAL
-    // -----------------------------
-    useEffect(() => {
-        const amount = Number(form.amount) || 0;
-
-        const gstPercentage = hasGst
-            ? Number(form.gstPercentage) || 0
-            : 0;
-
-        const tdsPercentage = hasTds
-            ? Number(form.tdsPercentage) || 0
-            : 0;
-
-        const gstAmount = (amount * gstPercentage) / 100;
-        const tdsAmount = (amount * tdsPercentage) / 100;
-
-        const total = amount + gstAmount - tdsAmount;
-
-        setForm((previous) => {
-            if (previous.total === total) {
-                return previous;
-            }
-
-            return {
-                ...previous,
-                total,
-            };
-        });
-    }, [
-        form.amount,
-        form.gstPercentage,
-        form.tdsPercentage,
-        hasGst,
-        hasTds,
+    // Installment schedule state
+    const [showInstallmentModal, setShowInstallmentModal] = useState(false);
+    const [numberOfInstallments, setNumberOfInstallments] = useState(2);
+    const [installments, setInstallments] = useState([
+        emptyInstallment(1), emptyInstallment(2),
     ]);
 
-    // -----------------------------
-    // GST CHECKBOX
-    // -----------------------------
-    const handleGstChange = (e) => {
-        const checked = e.target.checked;
+    // ── Fetch master data ─────────────────────────────────────────────────────
+    useEffect(() => {
+        (async () => {
+            try {
+                const [c, cat, b] = await Promise.all([
+                    api.get("/pjsofttech/user/users"),
+                    api.get("/pjsofttech/category"),
+                    api.get("/pjsofttech/bank"),
+                ]);
+                setContacts(c.data);
+                setCategories(cat.data);
+                setBanks(b.data);
+            } catch (e) { console.error("Fetch error:", e); }
+        })();
+    }, []);
 
+    // ── Auto-calculate total ──────────────────────────────────────────────────
+    useEffect(() => {
+        const amt = Number(form.amount) || 0;
+        const gst = hasGst ? (Number(form.gstPercentage) || 0) : 0;
+        const tds = hasTds ? (Number(form.tdsPercentage) || 0) : 0;
+        const total = amt + (amt * gst) / 100 - (amt * tds) / 100;
+
+        setForm((prev) => prev.total === total ? prev : { ...prev, total });
+    }, [form.amount, form.gstPercentage, form.tdsPercentage, hasGst, hasTds]);
+
+    // ── Form field change ─────────────────────────────────────────────────────
+    const handleChange = (name, value) =>
+        setForm((prev) => ({ ...prev, [name]: value }));
+
+    // ── GST toggle ───────────────────────────────────────────────────────────
+    const handleGstChange = (checked) => {
         setHasGst(checked);
-
-        if (!checked) {
-            setForm((previous) => ({
-                ...previous,
-                gstPercentage: "",
-                gstNumber: "",
-            }));
-        }
+        if (!checked) setForm((p) => ({ ...p, gstPercentage: "", gstNumber: "" }));
     };
 
-    // -----------------------------
-    // TDS CHECKBOX
-    // -----------------------------
-    const handleTdsChange = (e) => {
-        const checked = e.target.checked;
-
+    // ── TDS toggle ───────────────────────────────────────────────────────────
+    const handleTdsChange = (checked) => {
         setHasTds(checked);
-
-        if (!checked) {
-            setForm((previous) => ({
-                ...previous,
-                tdsPercentage: "",
-            }));
-        }
+        if (!checked) setForm((p) => ({ ...p, tdsPercentage: "" }));
     };
 
-    // ---------------------------------------
-    // PAYMENT Type CHANGE
-    // ---------------------------------------
-    const handlePaymentTypeChange = (e) => {
-        const value = e.target.value;
+    // ── Payment method change ────────────────────────────────────────────────
+    const handlePaymentMethodChange = (value) => {
+    handleChange("paymentMethod", value);
+};
 
-        setForm((previous) => ({
-            ...previous,
-            paymentType: value,
-        }));
 
-        // Open installment popup
+    // ── Payment type change ───────────────────────────────────────────────────
+    const handlePaymentTypeChange = (value) => {
+        handleChange("paymentType", value);
         if (value === "INSTALLMENT") {
-            setInstallment({
-                amount: "",
-                date: getTodayDate(),
-                remark: "",
-            });
-
-            setShowInstallmentPopup(true);
-        }
-
-        // If user switches back to complete
-        if (value === "ONE_TIME") {
-            setShowInstallmentPopup(false);
-
-            setInstallment({
-                amount: "",
-                date: getTodayDate(),
-                remark: "",
-            });
+            // Reset to 2 equal installments and open modal
+            const count = 2;
+            setNumberOfInstallments(count);
+            setInstallments([emptyInstallment(1), emptyInstallment(2)]);
+            setShowInstallmentModal(true);
+        } else {
+            setShowInstallmentModal(false);
+            setNumberOfInstallments(2);
+            setInstallments([emptyInstallment(1), emptyInstallment(2)]);
         }
     };
 
-    // ---------------------------------------
-    // INSTALLMENT INPUT
-    // ---------------------------------------
-    const handleInstallmentChange = (e) => {
-        const { name, value } = e.target;
 
-        setInstallment((previous) => ({
-            ...previous,
-            [name]: value,
-        }));
+    // ── Installment array change (from modal) ─────────────────────────────────
+    const handleInstallmentChange = (indexOrAction, fieldOrArray, value) => {
+        if (indexOrAction === "replace") {
+            setInstallments(Array.isArray(fieldOrArray) ? fieldOrArray : []);
+            return;
+        }
+        setInstallments((prev) =>
+            prev.map((item, i) =>
+                i === indexOrAction ? { ...item, [fieldOrArray]: value } : item
+            )
+        );
     };
 
-    // ---------------------------------------
-    // CONFIRM INITIAL PAYMENT
-    // ---------------------------------------
+    // ── Validate schedule (shared between confirm button and submit) ───────────
+    const validateSchedule = () => {
+        const totalPaise = toPaise(form.total);
+        const count = Number(numberOfInstallments);
+        const schedulePaise = installments.reduce((s, i) => s + toPaise(i.dueAmount), 0);
+
+        if (!count || count <= 0) return "Number of installments must be greater than zero.";
+        if (installments.length !== count) return "Installment count doesn't match. Please open the modal.";
+        if (Math.abs(schedulePaise - totalPaise) > 1) // 1 paise tolerance for rounding
+            return `Installment total (₹${(schedulePaise / 100).toFixed(2)}) must equal expense total (₹${(totalPaise / 100).toFixed(2)}).`;
+
+        for (const inst of installments) {
+            if (!inst.dueAmount || toPaise(inst.dueAmount) <= 0)
+                return `Installment #${inst.installmentNumber}: amount must be greater than zero.`;
+            if (!inst.dueDate)
+                return `Installment #${inst.installmentNumber}: due date is required.`;
+        }
+        return null; // valid
+    };
+
+    // ── Confirm installment schedule from modal ───────────────────────────────
     const handleConfirmInstallment = () => {
-        const initialPayment =
-            Number(installment.amount) || 0;
-
-        const total =
-            Number(form.total) || 0;
-
-        if (initialPayment <= 0) {
-            alert(
-                "Initial payment must be greater than zero."
-            );
-            return;
-        }
-
-        if (initialPayment > total) {
-            alert(
-                "Initial payment cannot be greater than the total amount."
-            );
-            return;
-        }
-
-        if (!installment.date) {
-            alert("Please select payment date.");
-            return;
-        }
-
-        setShowInstallmentPopup(false);
+        const err = validateSchedule();
+        if (err) { alert(err); return; }
+        setShowInstallmentModal(false);
     };
 
-    // ---------------------------------------
-    // CANCEL INSTALLMENT
-    // ---------------------------------------
+    // ── Cancel installment modal — revert to ONE_TIME ─────────────────────────
     const handleCancelInstallment = () => {
-        setShowInstallmentPopup(false);
-
-        setForm((previous) => ({
-            ...previous,
-            paymentType: "ONE_TIME",
-        }));
-
-        setInstallment({
-            amount: "",
-            date: getTodayDate(),
-            remark: "",
-        });
+        setShowInstallmentModal(false);
+        handleChange("paymentType", "ONE_TIME");
+        setNumberOfInstallments(2);
+        setInstallments([emptyInstallment(1), emptyInstallment(2)]);
     };
-    
 
-    // ---------------------------------------
+    // ─────────────────────────────────────────────────────────────────────────
     // SUBMIT
-    // ---------------------------------------
+    // ─────────────────────────────────────────────────────────────────────────
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // -----------------------------------
-        // BASIC VALIDATION
-        // -----------------------------------
-        if (!form.contactId) {
-            alert("Please select a contact.");
-            return;
-        }
+        // Basic field validation
+        if (!form.contactId) { alert("Please select a contact."); return; }
+        if (!form.categoryId) { alert("Please select a category."); return; }
+        if (!form.bankId) { alert("Please select a bank."); return; }
+        if (!form.amount || Number(form.amount) <= 0) { alert("Amount must be greater than zero."); return; }
 
-        if (!form.categoryId) {
-            alert("Please select a category.");
-            return;
-        }
-
-        if (!form.amount || Number(form.amount) <= 0) {
-            alert("Amount must be greater than zero.");
-            return;
-        }
-
-        // -----------------------------------
-        // INSTALLMENT VALIDATION
-        // -----------------------------------
+        // Installment schedule validation
         if (form.paymentType === "INSTALLMENT") {
-            const initialPayment =
-                Number(installment.amount) || 0;
-
-            const total =
-                Number(form.total) || 0;
-
-            if (initialPayment <= 0) {
-                setShowInstallmentPopup(true);
-
-                alert(
-                    "Please enter the initial payment amount."
-                );
-
+            const err = validateSchedule();
+            if (err) {
+                alert(err);
+                setShowInstallmentModal(true);
                 return;
             }
+        }
 
-            if (initialPayment > total) {
-                setShowInstallmentPopup(true);
+        // Build request body
+        const payload = {
+            contactId: Number(form.contactId),
+            categoryId: Number(form.categoryId),
+            bankId: Number(form.bankId),
+            type: form.type,
+            date: form.date,
+            particular: form.particular || null,
+            amount: Number(form.amount),
+            gstPercentage: hasGst ? Number(form.gstPercentage) : null,
+            gstNumber: hasGst ? form.gstNumber : null,
+            tdsPercentage: hasTds ? Number(form.tdsPercentage) : null,
+            paymentType: form.paymentType,
+            paymentMethod:form.paymentMethod,
+            remark: form.remark || null,
+        };
 
-                alert(
-                    "Initial payment cannot be greater than the total amount."
-                );
-
-                return;
-            }
-
-            if (!installment.date) {
-                setShowInstallmentPopup(true);
-
-                alert(
-                    "Please select initial payment date."
-                );
-
-                return;
-            }
+        if (form.paymentType === "INSTALLMENT") {
+            payload.numberOfInstallments = Number(numberOfInstallments);
+            payload.installments = installments.map((inst) => ({
+                installmentNumber: inst.installmentNumber,
+                dueAmount: Number(inst.dueAmount),
+                dueDate: inst.dueDate,
+            }));
         }
 
         try {
             setSubmitting(true);
+            await api.post("/pjsofttech/expense", payload);
+            alert("Transaction saved successfully!");
 
-            // -----------------------------------
-            // REQUEST DATA
-            // -----------------------------------
-            const requestData = {
-                contactId: Number(form.contactId),
-
-                type: form.type,
-
-                date: form.date,
-
-                categoryId: Number(form.categoryId),
-
-                particular: form.particular,
-
-                amount: Number(form.amount),
-
-                gstPercentage: hasGst
-                    ? Number(form.gstPercentage)
-                    : null,
-
-                gstNumber: hasGst
-                    ? form.gstNumber
-                    : null,
-
-                tdsPercentage: hasTds
-                    ? Number(form.tdsPercentage)
-                    : null,
-
-                total: Number(form.total),
-
-                paymentType: form.paymentType,
-
-                remark: form.remark,
-            };
-
-            // -----------------------------------
-            // ADD INSTALLMENT DATA ONLY WHEN
-            // PAYMENT STATUS = INSTALLMENT
-            // -----------------------------------
-            if (
-                form.paymentType ===
-                "INSTALLMENT"
-            ) {
-                requestData.installmentRequestDto = {
-                    amount: Number(
-                        installment.amount
-                    ),
-
-                    date: installment.date,
-
-                    remark: installment.remark,
-                };
-            }
-
-            console.log(
-                "Expense Request:",
-                requestData
-            );
-
-            // -----------------------------------
-            // API CALL
-            // -----------------------------------
-            const response = await api.post(
-                "/pjsofttech/expense",
-                requestData
-            );
-
-            console.log(
-                "Expense Response:",
-                response.data
-            );
-
-            alert(
-                "Transaction added successfully!"
-            );
-
-            // -----------------------------------
-            // RESET
-            // -----------------------------------
-            setForm(getEmptyForm());
-
+            // Reset
+            setForm(emptyForm());
             setHasGst(false);
             setHasTds(false);
+            setNumberOfInstallments(2);
+            setInstallments([emptyInstallment(1), emptyInstallment(2)]);
+            setShowInstallmentModal(false);
 
-            setInstallment({
-                amount: "",
-                date: getTodayDate(),
-                remark: "",
-            });
-
-            setShowInstallmentPopup(false);
-        } catch (error) {
-            console.error(
-                "Error adding expense:",
-                error
-            );
-
-            console.error(
-                "Backend response:",
-                error.response?.data
-            );
-
-            const backendMessage =
-                error.response?.data?.message ||
-                error.response?.data?.error;
-
+        } catch (err) {
+            console.error("Submit error:", err);
             alert(
-                backendMessage ||
-                "Failed to add transaction"
+                err.response?.data?.error ||
+                err.response?.data?.message ||
+                "Failed to save transaction."
             );
         } finally {
             setSubmitting(false);
         }
     };
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // UI
+    // ─────────────────────────────────────────────────────────────────────────
+
     return (
-        <div className="expense-page">
-
-            <div className="expense-card">
-
-                {/* -------------------------------- */}
-                {/* HEADER */}
-                {/* -------------------------------- */}
-
-                <div className="expense-header">
-                    {/* <h1>Add Transaction</h1> */}
-
-                    <p>
-                        Record a new income or expense
+        <div className="p-6">
+            <Card className="mx-auto max-w-5xl shadow-lg border-slate-200">
+                <CardHeader className="border-b border-slate-100 pb-4">
+                    <CardTitle className="text-xl font-bold text-slate-800">
+                        Add Transaction
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                        Record income or expense. Installment schedules are set before saving.
                     </p>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-
-                    {/* ROW 1 */}
-                    <div className="form-row">
-
-                        <div className="form-group">
-                            <label>Type</label>
-
-                            <select
-                                name="type"
-                                value={form.type}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="EXPENSE">Expense</option>
-                                <option value="INCOME">Income</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label>User / Contact</label>
-
-                            <select
-                                name="contactId"
-                                value={form.contactId}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">
-                                    Select Contact
-                                </option>
-
-                                {contacts.map((contact) => (
-                                    <option
-                                        key={contact.id}
-                                        value={contact.id}
-                                    >
-                                        {contact.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                    </div>
-
-
-                    {/* ROW 2 */}
-                    <div className="form-row">
-
-                        <div className="form-group">
-                            <label>Date</label>
-
-                            <input
-                                type="date"
-                                name="date"
-                                value={form.date}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Category</label>
-
-                            <select
-                                name="categoryId"
-                                value={form.categoryId}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">
-                                    Select Category
-                                </option>
-
-                                {categories.map((category) => (
-                                    <option
-                                        key={category.id}
-                                        value={category.id}
-                                    >
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                    </div>
-
-
-                    {/* ROW 3 */}
-                    <div className="form-row">
-
-                        <div className="form-group">
-                            <label>Particular</label>
-
-                            <input
-                                type="text"
-                                name="particular"
-                                placeholder="Enter particular"
-                                value={form.particular}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Amount</label>
-
-                            <input
-                                type="number"
-                                name="amount"
-                                placeholder="Enter amount"
-                                min="0"
-                                step="1"
-                                value={form.amount}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                    </div>
-
-
-                    {/* GST + TDS */}
-                    <div className="tax-row">
-
-                        {/* GST */}
-                        <div className="checkbox-section">
-
-                            <label className="checkbox-label">
-
-                                <input
-                                    type="checkbox"
-                                    checked={hasGst}
-                                    onChange={handleGstChange}
-                                />
-
-                                <span>Apply GST</span>
-
-                            </label>
-
-                            {hasGst && (
-                                <div className="conditional-fields">
-
-                                    <div className="form-group">
-                                        <label>GST %</label>
-
-                                        <input
-                                            type="number"
-                                            name="gstPercentage"
-                                            placeholder="18"
-                                            min="0"
-                                            max="100"
-                                            step="0.01"
-                                            value={form.gstPercentage}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>GST Number</label>
-
-                                        <input
-                                            type="text"
-                                            name="gstNumber"
-                                            placeholder="GST number"
-                                            value={form.gstNumber}
-                                            onChange={handleChange}
-                                        />
-                                    </div>
-
-                                </div>
-                            )}
-
-                        </div>
-
-
-                        {/* TDS */}
-                        <div className="checkbox-section">
-
-                            <label className="checkbox-label">
-
-                                <input
-                                    type="checkbox"
-                                    checked={hasTds}
-                                    onChange={handleTdsChange}
-                                />
-
-                                <span>Apply TDS</span>
-
-                            </label>
-
-                            {hasTds && (
-                                <div className="conditional-fields">
-
-                                    <div className="form-group">
-                                        <label>TDS %</label>
-
-                                        <input
-                                            type="number"
-                                            name="tdsPercentage"
-                                            placeholder="10"
-                                            min="0"
-                                            max="100"
-                                            step="0.01"
-                                            value={form.tdsPercentage}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                    </div>
-
-                                </div>
-                            )}
-
-                        </div>
-
-                    </div>
-
-
-                    {/* ROW 5 */}
-                    <div className="form-row">
-
-                        {/* TOTAL */}
-                        <div className="total-section">
-
-                            <div>
-                                <span>Total Amount</span>
-
-                                <strong>
-                                    ₹{Number(form.total).toLocaleString("en-IN")}
-                                </strong>
-                            </div>
-
-                        </div>
-
-
-                        {/* PAYMENT TYPE */}
-                        <div className="form-group">
-
-                            <label>Payment Type</label>
-
-                            <select
-                                name="paymentType"
-                                value={form.paymentType}
-                                onChange={handlePaymentTypeChange}
-                                required
-                            >
-                                <option value="ONE_TIME">
-                                    One Time Payment
-                                </option>
-
-                                <option value="INSTALLMENT">
-                                    Pay in Installments
-                                </option>
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* REMARK */}
-                    <div className="form-group">
-
-                        <label>Remark</label>
-
-                        <textarea
-                            name="remark"
-                            placeholder="Add an optional remark..."
-                            value={form.remark}
-                            onChange={handleChange}
-                            rows="2"
-                        />
-
-                    </div>
-
-
-                    {/* SUBMIT */}
-                    <button
-                        type="submit"
-                        className="submit-expense-button"
-                        disabled={submitting}
-                    >
-                        {submitting
-                            ? "Saving..."
-                            : "Save Transaction"}
-                    </button>
-
-                </form>
-
-
-            </div>
-
-            {/* ================================================= */}
-            {/* INITIAL PAYMENT POPUP */}
-            {/* ================================================= */}
-
-            {showInstallmentPopup && (
-                <div className="modal-overlay">
-
-                    <div className="installment-modal">
-
-                        <div className="modal-header">
-
-                            <div>
-                                <h2>
-                                    Initial Payment
-                                </h2>
-
-                                <p>
-                                    Enter the first
-                                    installment payment
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="modal-close"
-                                onClick={
-                                    handleCancelInstallment
-                                }
-                            >
-                                ×
-                            </button>
-
-                        </div>
-
-                        {/* TOTAL */}
-                        <div className="payment-summary">
-
-                            <div>
-                                <span>
-                                    Total Amount
-                                </span>
-
-                                <strong>
-                                    ₹{" "}
-                                    {Number(
-                                        form.total
-                                    ).toLocaleString(
-                                        "en-IN"
-                                    )}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span>
-                                    Initial Payment
-                                </span>
-
-                                <strong>
-                                    ₹{" "}
-                                    {Number(
-                                        installment.amount
-                                    ).toLocaleString(
-                                        "en-IN"
-                                    )}
-                                </strong>
-                            </div>
-
-                            <div>
-                                <span>
-                                    Remaining
-                                </span>
-
-                                <strong>
-                                    ₹{" "}
-                                    {Math.max(
-                                        Number(
-                                            form.total
-                                        ) -
-                                        (Number(
-                                            installment.amount
-                                        ) || 0),
-                                        0
-                                    ).toLocaleString(
-                                        "en-IN"
-                                    )}
-                                </strong>
-                            </div>
-
-                        </div>
-
-                        {/* PAYMENT AMOUNT */}
-                        <div className="form-group">
-
-                            <label>
-                                Initial Payment Amount
-                            </label>
-
-                            <input
-                                type="number"
-                                name="amount"
-                                placeholder="Enter initial payment"
-                                min="1"
-                                max={form.total}
-                                step="1"
-                                value={
-                                    installment.amount
-                                }
-                                onChange={
-                                    handleInstallmentChange
-                                }
-                                autoFocus
-                            />
-
-                            <small>
-                                Maximum: ₹{" "}
-                                {Number(
-                                    form.total
-                                ).toLocaleString(
-                                    "en-IN"
-                                )}
-                            </small>
-
-                        </div>
-
-                        {/* PAYMENT DATE */}
-                        <div className="form-group">
-
-                            <label>
-                                Payment Date
-                            </label>
-
-                            <input
-                                type="date"
-                                name="date"
-                                value={
-                                    installment.date
-                                }
-                                onChange={
-                                    handleInstallmentChange
-                                }
-                            />
-
-                        </div>
-
-                        {/* PAYMENT REMARK */}
-                        {/* <div className="form-group">
-
-                            <label>
-                                Payment Remark
-                            </label>
-
-                            <textarea
-                                name="remark"
-                                placeholder="Enter payment remark"
-                                value={
-                                    installment.remark
-                                }
-                                onChange={
-                                    handleInstallmentChange
-                                }
-                                rows="3"
-                            />
-
-                        </div> */}
-
-                        {/* BUTTONS */}
-                        <div className="modal-actions">
-
-                            <button
-                                type="button"
-                                className="cancel-button"
-                                onClick={
-                                    handleCancelInstallment
-                                }
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="confirm-button"
-                                onClick={
-                                    handleConfirmInstallment
-                                }
-                            >
-                                Confirm Initial Payment
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-            )}
-
+                </CardHeader>
+
+                <CardContent className="pt-5">
+                    <TransactionForm
+                        form={form}
+                        contacts={contacts}
+                        categories={categories}
+                        banks={banks}
+                        hasGst={hasGst}
+                        hasTds={hasTds}
+                        submitting={submitting}
+                        onChange={handleChange}
+                        onGstChange={handleGstChange}
+                        onTdsChange={handleTdsChange}
+                        onPaymentTypeChange={handlePaymentTypeChange}
+                        onPaymentMethodChange={handlePaymentMethodChange}
+                        onSubmit={handleSubmit}
+                        /* Pass schedule info so form can show a summary badge */
+                        installmentScheduleConfirmed={
+                            form.paymentType === "INSTALLMENT" && !showInstallmentModal
+                        }
+                        onEditSchedule={() => setShowInstallmentModal(true)}
+                    />
+                </CardContent>
+            </Card>
+
+            <InstallmentModal
+                open={showInstallmentModal}
+                total={form.total}
+                numberOfInstallments={numberOfInstallments}
+                setNumberOfInstallments={(v) => setNumberOfInstallments(Number(v))}
+                installments={installments}
+                onInstallmentChange={handleInstallmentChange}
+                onConfirm={handleConfirmInstallment}
+                onCancel={handleCancelInstallment}
+            />
         </div>
     );
 }
-
