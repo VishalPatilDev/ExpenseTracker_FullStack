@@ -33,7 +33,7 @@ export default function TransactionForm({
 
             {/* BASIC INFORMATION */}
 
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
 
                 <Field label="Type">
                     <Select
@@ -174,12 +174,6 @@ export default function TransactionForm({
                         }
                     />
                 </Field>
-            </div>
-
-            {/* TAX */}
-
-            <div className="grid gap-6 md:grid-cols-2">
-
                 <div className="space-y-4 rounded-lg border p-4">
                     <div className="flex items-center gap-2">
                         <Checkbox
@@ -257,9 +251,16 @@ export default function TransactionForm({
 
             </div>
 
+            {/* TAX */}
+
+            {/* <div className="grid gap-3 md:grid-cols-3">
+
+                
+            </div> */}
+
             {/* TOTAL + PAYMENT */}
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3 items-center justify-center">
 
                 <div className="rounded-lg bg-muted p-4">
                     <p className="text-sm text-muted-foreground">
@@ -347,7 +348,7 @@ export default function TransactionForm({
             <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full"
+                className="w-full bg-blue-100 hover:bg-blue-300"
             >
                 {submitting
                     ? "Saving..."

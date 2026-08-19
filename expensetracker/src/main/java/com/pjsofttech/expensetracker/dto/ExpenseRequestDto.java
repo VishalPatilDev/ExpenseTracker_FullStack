@@ -63,39 +63,3 @@ public class ExpenseRequestDto {
     private List<InstallmentScheduleDto> installments;
 }
 
-//package com.pjsofttech.expensetracker.dto;
-//
-//import com.pjsofttech.expensetracker.model.*;
-//import jakarta.persistence.*;
-//import lombok.AllArgsConstructor;
-//import lombok.Builder;
-//import lombok.Data;
-//import lombok.NoArgsConstructor;
-//
-//import java.time.LocalDate;
-//import java.time.LocalDateTime;
-//import java.util.List;
-//
-//@Data
-//@Builder
-//@AllArgsConstructor
-//@NoArgsConstructor
-//public class ExpenseRequestDto {
-//    private Long contactId;
-//    private TransactionType type;
-//    private LocalDate date;
-//    private Long categoryId;
-//    private Long bankId;
-//    private String particular;
-//    private Long amount;
-//    private Long gstPercentage;
-//    private String gstNumber;
-//    private Long tdsPercentage;
-//    private Long total;
-//    private PaymentType paymentType; //COMPLETE, INSTALLMENT
-//    private PaymentMethod paymentMethod;
-//    private InstallmentRequestDto installmentRequestDto;
-//    private String remark;
-//    private Integer numberOfInstallments;
-//    private List<InstallmentScheduleRequestDto> installments;
-//}

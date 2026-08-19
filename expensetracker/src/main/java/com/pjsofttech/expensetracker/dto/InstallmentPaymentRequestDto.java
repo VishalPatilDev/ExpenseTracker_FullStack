@@ -26,20 +26,4 @@ public class InstallmentPaymentRequestDto {
 
     private String remark;
 }
-//package com.pjsofttech.expensetracker.dto;
-//
-//import lombok.Data;
-//
-//import java.time.LocalDate;
-//
-//@Data
-//public class InstallmentPaymentRequestDto {
-//
-//    private Long installmentId;
-//
-//    private Long amount;
-//
-//    private LocalDate paymentDate;
-//
-//    private String remark;
-//}
+

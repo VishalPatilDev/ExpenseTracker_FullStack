@@ -28,18 +28,3 @@ public class InstallmentScheduleDto {
     @NotNull(message = "Due date is required")
     private LocalDate dueDate;
 }
-//package com.pjsofttech.expensetracker.dto;
-//
-//import lombok.Data;
-//
-//import java.time.LocalDate;
-//
-//@Data
-//public class InstallmentScheduleDto {
-//
-//    private Integer installmentNumber;
-//
-//    private Long dueAmount;
-//
-//    private LocalDate dueDate;
-//}
