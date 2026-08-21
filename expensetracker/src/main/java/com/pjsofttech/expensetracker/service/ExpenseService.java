@@ -39,9 +39,23 @@ public class ExpenseService {
         Contact contact = contactRepository.findById(req.getContactId())
                 .orElseThrow(() -> new RuntimeException("Contact not found with id: " + req.getContactId()));
 
-        Bank bank = bankRepository.findById(req.getBankId())
-                .orElseThrow(() -> new RuntimeException("Bank not found with id: " + req.getBankId()));
+//        Bank bank = bankRepository.findById(req.getBankId())
+//                .orElseThrow(() -> new RuntimeException("Bank not found with id: " + req.getBankId()));
 
+        Bank bank = null;
+
+        if (req.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
+            if (req.getBankId() == null) {
+                throw new IllegalArgumentException(
+                        "Bank is required when payment method is BANK_TRANSFER."
+                );
+            }
+
+            bank = bankRepository.findById(req.getBankId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Bank not found with id: " + req.getBankId())
+                    );
+        }
         // ── 2. Calculate total on the backend — never trust frontend total ────
         BigDecimal backendTotal = calculateTotal(req.getAmount(), req.getGstPercentage(), req.getTdsPercentage());
 
@@ -415,8 +429,7 @@ public class ExpenseService {
                         .id(expense.getCategory().getId())
                         .name(expense.getCategory().getName())
                         .build())
-                .bankId(expense.getBank().getId())
-                .amount(amount)
+                .bankId(expense.getBank() != null ? expense.getBank().getId() : null)                .amount(amount)
                 .gstPercentage(gstPct)
                 .gstAmount(gstAmount)
                 .gstNumberStr(expense.getGstNumber())

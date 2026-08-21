@@ -43,8 +43,8 @@ public class Expense {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "bank_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY,optional = true )
+    @JoinColumn(name = "bank_id",nullable = true)
     private Bank bank;
 
     @Enumerated(EnumType.STRING)
