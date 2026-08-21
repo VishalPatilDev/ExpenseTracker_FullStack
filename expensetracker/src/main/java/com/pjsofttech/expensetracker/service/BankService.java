@@ -23,6 +23,8 @@ public class BankService {
                 .accountNumber(bankRequestDto.getAccountNumber())
                 .branch(bankRequestDto.getBranch())
                 .owner(loggedInUser)
+                .ifsc(bankRequestDto.getIfsc())
+                .accountType(bankRequestDto.getAccountType())
                 .build();
         bankRepository.save(bank);
 
@@ -31,6 +33,8 @@ public class BankService {
                 .branch(bank.getBranch())
                 .accountNumber(bank.getAccountNumber())
                 .name(bank.getName())
+                .ifsc(bank.getIfsc())
+                .accountType(bank.getAccountType())
                 .build();
 
 
@@ -40,7 +44,10 @@ public class BankService {
         List<Bank> banks = bankRepository.findByOwner_Id(loggedInUser.getId());
         return banks.stream()
                 .map((b)->BankResponseDto.builder()
-                        .id(b.getId()).name(b.getName()).accountNumber(b.getAccountNumber()).branch(b.getBranch()).build()).toList();
+                        .id(b.getId()).name(b.getName()).accountNumber(b.getAccountNumber()).branch(b.getBranch())
+                        .ifsc(b.getIfsc())
+                        .accountType(b.getAccountType())
+                                .build()).toList();
     }
 
     public String deleteBank(Long id, User loggedInUser) {

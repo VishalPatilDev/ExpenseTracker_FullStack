@@ -51,6 +51,8 @@ const emptyContact = {
     name: "",
     phoneNumber: "",
     email: "",
+    ifsc: "",
+    accountType: "",
 };
 
 const emptyBank = {
@@ -712,7 +714,7 @@ const Settings = () => {
                                                 <TableBody>
 
                                                     {contacts.length ===
-                                                    0 ? (
+                                                        0 ? (
                                                         <TableRow>
                                                             <TableCell
                                                                 colSpan={
@@ -959,7 +961,7 @@ const Settings = () => {
                                                 <TableBody>
 
                                                     {categories.length ===
-                                                    0 ? (
+                                                        0 ? (
                                                         <TableRow>
                                                             <TableCell
                                                                 colSpan={
@@ -1184,6 +1186,37 @@ const Settings = () => {
                                                 />
 
                                             </div>
+                                            <div className="space-y-2">
+                                                <Label>IFSC Code</Label>
+
+                                                <Input
+                                                    value={bank.ifsc}
+                                                    onChange={(e) =>
+                                                        setBank({
+                                                            ...bank,
+                                                            ifsc: e.target.value.toUpperCase(),
+                                                        })
+                                                    }
+                                                    placeholder="e.g. HDFC0001234"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Account Type</Label>
+
+                                                <Input
+                                                    value={bank.accountType}
+                                                    onChange={(e) =>
+                                                        setBank({
+                                                            ...bank,
+                                                            accountType: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="e.g. Savings / Current"
+                                                    required
+                                                />
+                                            </div>
 
                                             <div className="flex justify-end gap-2">
 
@@ -1250,6 +1283,13 @@ const Settings = () => {
                                                         <TableHead>
                                                             Account Number
                                                         </TableHead>
+                                                        <TableHead>
+                                                            IFSC
+                                                        </TableHead>
+
+                                                        <TableHead>
+                                                            Account Type
+                                                        </TableHead>
 
                                                         <TableHead className="text-right">
                                                             Action
@@ -1262,7 +1302,7 @@ const Settings = () => {
                                                 <TableBody>
 
                                                     {banks.length ===
-                                                    0 ? (
+                                                        0 ? (
                                                         <TableRow>
                                                             <TableCell
                                                                 colSpan={
@@ -1306,6 +1346,13 @@ const Settings = () => {
                                                                         {
                                                                             item.accountNumber
                                                                         }
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        {item.ifsc}
+                                                                    </TableCell>
+
+                                                                    <TableCell>
+                                                                        {item.accountType}
                                                                     </TableCell>
 
                                                                     <TableCell className="text-right">
