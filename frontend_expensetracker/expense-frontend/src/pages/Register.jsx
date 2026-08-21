@@ -188,7 +188,7 @@ const Register = () => {
                         {/* Register */}
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full border- hover:bg-gray-400"
                             disabled={loading}
                         >
                             {loading
@@ -199,8 +199,8 @@ const Register = () => {
                         {/* Login */}
                         <Button
                             type="button"
-                            variant="outline"
-                            className="w-full"
+                            // variant="outline"
+                            className="w-full  hover:text-lg underline"
                             onClick={() => navigate("/login")}
                         >
                             Already have an account? Login

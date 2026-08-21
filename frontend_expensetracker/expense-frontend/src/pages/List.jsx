@@ -109,7 +109,8 @@ export default function List() {
         ) return false;
 
         return [
-            !filters.type || exp.type === filters.type,
+            !filters.type || filters.type === "All" || exp.type === filters.type,
+            // !filters.type || exp.type === filters.type,
             !filters.category || String(exp.category?.id) === filters.category,
             !filters.paymentType || exp.paymentType === filters.paymentType,
             !filters.paymentStatus || exp.paymentStatus === filters.paymentStatus,
@@ -270,7 +271,7 @@ export default function List() {
                 </div>
                 <div className="flex gap-2">
                     <Button className='hover:bg-gray-400' variant="outline" onClick={downloadCSV} disabled={!filteredExpenses.length}>
-                        <Download className="mr-1.5 h-4 w-4" /> Export CSV
+                        <Download className="mr-1.5 h-4 w-4" />CSV
                     </Button>
                     <Button onClick={() => navigate("/expense")} className="bg-blue-300 hover:bg-blue-500">
                         <Plus className=" mr-1.5 h-4 w-4" /> Add Transaction
@@ -298,7 +299,7 @@ export default function List() {
             {/* ── Search + Filters ─────────────────────────────────────────── */}
             <div className="space-y-3">
                 <input
-                    className="w-full max-w-sm rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    className="w-full max-w-sm rounded-lg border border-slate-500 px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-slate-300"
                     placeholder="Search by contact, category or particular..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}

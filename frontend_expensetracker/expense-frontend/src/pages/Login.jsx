@@ -141,7 +141,7 @@ export default function Login() {
                         {/* Login */}
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full border- hover:bg-gray-400 "
                             disabled={loading}
                         >
                             {loading
@@ -152,8 +152,8 @@ export default function Login() {
                         {/* Register */}
                         <Button
                             type="button"
-                            variant="outline"
-                            className="w-full"
+                            // variant="outline"
+                            className="w-full  hover:text-lg underline"
                             onClick={handleRegister}
                         >
                             New User? Register

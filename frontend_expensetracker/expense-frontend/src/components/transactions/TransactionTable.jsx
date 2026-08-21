@@ -148,7 +148,7 @@ export default function TransactionTable({ expenses, onPayInstallment }) {
                 </TableHeader>
 
                 <TableBody>
-                    {sortedExpenses.length === 0 && (
+                    {expenses.length === 0 && (
                         <TableRow>
                             <TableCell colSpan={18} className="text-center py-12 text-muted-foreground text-sm">
                                 No transactions found.
@@ -156,7 +156,7 @@ export default function TransactionTable({ expenses, onPayInstallment }) {
                         </TableRow>
                     )}
 
-                    {sortedExpenses.map((exp, i) => (
+                    {expenses.map((exp, i) => (
                         <TableRow key={exp.id} className="hover:bg-slate-50/50 transition-colors">
 
                             <TableCell className="border-r text-xs text-muted-foreground font-medium">
