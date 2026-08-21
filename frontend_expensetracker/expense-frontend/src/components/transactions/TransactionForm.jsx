@@ -12,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import SearchableDropdown from "../filters/SearchableDropdown";
 
 export default function TransactionForm({
     form,
@@ -46,7 +47,7 @@ export default function TransactionForm({
                             <SelectValue />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             <SelectItem value="EXPENSE">
                                 Expense
                             </SelectItem>
@@ -59,7 +60,7 @@ export default function TransactionForm({
                 </Field>
 
                 <Field label="User / Contact">
-                    <Select
+                    {/* <Select
                         value={form.contactId}
                         onValueChange={(value) =>
                             onChange("contactId", value)
@@ -69,7 +70,7 @@ export default function TransactionForm({
                             <SelectValue placeholder="Select contact" />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             {contacts.map((contact) => (
                                 <SelectItem
                                     key={contact.id}
@@ -79,7 +80,16 @@ export default function TransactionForm({
                                 </SelectItem>
                             ))}
                         </SelectContent>
-                    </Select>
+                    </Select> */}
+                    <SearchableDropdown
+                        value={form.contactId}
+                        onChange={(value) => onChange("contactId", value)}
+                        placeholder="Select contact"
+                        options={contacts.map((contact) => ({
+                            value: contact.id,
+                            label: contact.name,
+                        }))}
+                    />
                 </Field>
 
                 <Field label="Date">
@@ -93,7 +103,7 @@ export default function TransactionForm({
                 </Field>
 
                 <Field label="Category">
-                    <Select
+                    {/* <Select
                         value={form.categoryId}
                         onValueChange={(value) =>
                             onChange("categoryId", value)
@@ -103,7 +113,7 @@ export default function TransactionForm({
                             <SelectValue placeholder="Select category" />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             {categories.map((category) => (
                                 <SelectItem
                                     key={category.id}
@@ -113,11 +123,20 @@ export default function TransactionForm({
                                 </SelectItem>
                             ))}
                         </SelectContent>
-                    </Select>
+                    </Select> */}
+                    <SearchableDropdown
+                        value={form.categoryId}
+                        onChange={(value) => onChange("categoryId", value)}
+                        placeholder="Select Category"
+                        options={categories.map((category) => ({
+                            value: category.id,
+                            label: category.name,
+                        }))}
+                    />
                 </Field>
 
                 <Field label="Bank">
-                    <Select
+                    {/* <Select
                         value={form.bankId}
                         onValueChange={(value) =>
                             onChange("bankId", value)
@@ -127,7 +146,7 @@ export default function TransactionForm({
                             <SelectValue placeholder="Select bank" />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             {banks.map((bank) => (
                                 <SelectItem
                                     key={bank.id}
@@ -143,7 +162,20 @@ export default function TransactionForm({
                                 </SelectItem>
                             ))}
                         </SelectContent>
-                    </Select>
+                    </Select> */}
+                    <SearchableDropdown
+                        value={form.bankId}
+                        onChange={(value) => onChange("bankId", value)}
+                        placeholder="Select bank"
+                        options={banks.map((bank) => ({
+                            value: bank.id,
+                            label: `${bank.name}${
+            bank.branch ? ` - ${bank.branch}` : ""
+        }${
+            bank.accountNumber ? ` (${bank.accountNumber})` : ""
+        }`,
+                        }))}
+                    />
                 </Field>
 
                 <Field label="Particular">
@@ -283,7 +315,7 @@ export default function TransactionForm({
                             <SelectValue />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             <SelectItem value="CASH">
                                 CASH
                             </SelectItem>
@@ -313,7 +345,7 @@ export default function TransactionForm({
                             <SelectValue />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        <SelectContent className='bg-white'>
                             <SelectItem value="ONE_TIME">
                                 One Time Payment
                             </SelectItem>

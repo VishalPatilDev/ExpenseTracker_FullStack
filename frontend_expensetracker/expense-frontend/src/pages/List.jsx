@@ -28,6 +28,15 @@ const getTodayDate = () => {
         String(d.getDate()).padStart(2, "0"),
     ].join("-");
 };
+const getTodayDateTime = () => {
+    const d = new Date();
+
+    return [
+        d.getFullYear(),
+        String(d.getMonth() + 1).padStart(2, "0"),
+        String(d.getDate()).padStart(2, "0"),
+    ].join("-") + "T00:00:00";
+};
 
 const fmt = (v) =>
     Number(v ?? 0).toLocaleString("en-IN", {
@@ -35,7 +44,7 @@ const fmt = (v) =>
         maximumFractionDigits: 2,
     });
 
-const emptyPaymentForm = () => ({ amount: "", date: getTodayDate(), remark: "" });
+const emptyPaymentForm = () => ({ amount: "", date: getTodayDateTime(), remark: "" });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT

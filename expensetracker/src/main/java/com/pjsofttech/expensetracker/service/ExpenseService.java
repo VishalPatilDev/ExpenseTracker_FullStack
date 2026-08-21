@@ -184,7 +184,7 @@ public class ExpenseService {
     // ═════════════════════════════════════════════════════════════════════════
 
     public List<ExpenseResponseDto> getAllExpenses(User loggedInUser) {
-        List<Expense> expenses = expenseRepository.findByOwner(loggedInUser);
+        List<Expense> expenses = expenseRepository.findByOwnerOrderByDateDescIdDesc(loggedInUser);
         AtomicInteger index = new AtomicInteger(1);
         return expenses.stream()
                 .map(e -> buildExpenseResponse(e, index))

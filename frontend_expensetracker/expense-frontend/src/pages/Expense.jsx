@@ -19,6 +19,15 @@ const getTodayDate = () => {
         String(d.getDate()).padStart(2, "0"),
     ].join("-");
 };
+// const getTodayDateTime = () => {
+//     const d = new Date();
+
+//     return [
+//         d.getFullYear(),
+//         String(d.getMonth() + 1).padStart(2, "0"),
+//         String(d.getDate()).padStart(2, "0"),
+//     ].join("-") + "T00:00:00";
+// };
 
 /** Convert to integer paise (avoids float issues). */
 const toPaise = (v) => Math.round(Number(v || 0) * 100);
@@ -209,7 +218,7 @@ export default function Expense() {
             categoryId: Number(form.categoryId),
             bankId: Number(form.bankId),
             type: form.type,
-            date: form.date,
+            date: `${form.date}T00:00:00`,
             particular: form.particular || null,
             amount: Number(form.amount),
             gstPercentage: hasGst ? Number(form.gstPercentage) : null,
@@ -261,7 +270,7 @@ export default function Expense() {
     return (
         <div className="p-6">
             <Card className="mx-auto max-w-5xl shadow-lg border-slate-200">
-                <CardHeader className="border-b border-slate-100 pb-4">
+                <CardHeader className="border-b border-slate-100 pb-4 shadow-xl">
                     <CardTitle className="text-xl font-bold text-slate-800">
                         Add Transaction
                     </CardTitle>

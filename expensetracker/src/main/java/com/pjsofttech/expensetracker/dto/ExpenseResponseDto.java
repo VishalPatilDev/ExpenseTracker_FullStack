@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -19,7 +20,7 @@ public class ExpenseResponseDto {
     private Long id;
     private Integer index;
 
-    private LocalDate date;
+    private LocalDateTime date;
     private TransactionType type;
     private String particular;
     private String remark;

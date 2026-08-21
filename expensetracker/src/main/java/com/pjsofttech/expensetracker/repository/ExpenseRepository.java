@@ -24,4 +24,5 @@ public interface ExpenseRepository extends JpaRepository<Expense,Long> {
     List<Expense> findByDateBetween(LocalDateTime start, LocalDateTime end);
 
     List<Expense> findByPaymentMethod(PaymentMethod paymentMethodRequestDto);
+    List<Expense> findByOwnerOrderByDateDescIdDesc(User loggedInUser);
 }

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 @Getter
 @Setter
@@ -27,7 +28,7 @@ public class ExpenseRequestDto {
     private TransactionType type;
 
     @NotNull(message = "Date is required")
-    private LocalDate date;
+    private LocalDateTime date;
 
     private String particular;
 
