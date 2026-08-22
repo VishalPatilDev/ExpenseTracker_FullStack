@@ -3,7 +3,7 @@ import axios from "axios";
 //create custom axios instance so instead of axios.get("http://localhost:8080/users"), axios.post every time 
 //just api.get("api/users"), api.post
 const api = axios.create({
-    baseURL: "http://localhost:8080"
+    baseURL: import.meta.env.VITE_API_URL
 })
 //Every request will go through interceptor before going to backend
 api.interceptors.request.use((config) => {

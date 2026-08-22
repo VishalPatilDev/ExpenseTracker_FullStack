@@ -1,7 +1,7 @@
-DB_URL=jdbc:mysql://localhost:3306/pjsoftdb
+DB_URL=jdbc:mysql://mysql.railway.internal:3306/railway
 DB_USERNAME=root
-DB_PASSWORD=root123
-
+DB_PASSWORD=ArdxiqKNFmBwuOTQMVAdbXNKBPzJsLWE
+FRONTEND_URL=http://localhost:5173
 JWT_SECRET=THIS_IS_A_SECRET_KEY_FOR_JWT_UNDERSTANDING_IT_SHOULD_BE_OF_32_BYTES
 JWT_EXPIRATION=3600000
 
