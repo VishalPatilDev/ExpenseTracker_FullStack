@@ -1,220 +1,116 @@
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-// import SearchableSelect from "../filters/SearchableSelect";
 import SearchableDropdown from "../filters/SearchableDropdown";
 
+// Outlined select matching PJSOFTTECH floating-label style
+const FilterSelect = ({ label, value, onChange, children }) => (
+    <div className="relative border border-gray-300 rounded focus-within:border-[#4A90D9] transition-colors">
+        <span className="absolute top-1 left-3 text-[9px] font-medium text-gray-400 uppercase tracking-wide">
+            {label}
+        </span>
+        <select
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-white text-sm text-gray-700 pt-5 pb-2 px-3 focus:outline-none appearance-none rounded"
+        >
+            <option value=""></option>
+            {children}
+        </select>
+        {/* chevron */}
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+    </div>
+);
 
-export default function TransactionFilters({
-    filters,
-    categories,
-    contacts,
-    onChange,
-    onClear,
-}) {
+const FilterSearchable = ({ label, value, onChange, options, placeholder }) => (
+    <div className="relative border border-gray-300 rounded focus-within:border-[#4A90D9] transition-colors">
+        <span className="absolute top-1 left-3 text-[9px] font-medium text-gray-400 uppercase tracking-wide z-10">
+            {label}
+        </span>
+        <div className="pt-5 pb-1 px-2">
+            <SearchableDropdown
+                value={value}
+                onChange={onChange}
+                options={options}
+                placeholder={placeholder}
+                minimal
+            />
+        </div>
+    </div>
+);
 
-    const categoryOptions = [
-        ...categories.map((category) => ({
-            value: category.id,
-            label: category.name,
-        })),
-    ];
-
-    const contactOptions = [
-        ...contacts.map((contact) => ({
-            value: contact.id,
-            label: contact.name,
-        })),
-    ];
+export default function TransactionFilters({ filters, categories, contacts, onChange, onClear }) {
+    const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }));
+    const contactOptions = contacts.map((c) => ({ value: c.id, label: c.name }));
 
     return (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3 items-end">
 
-            {/* TYPE */}
-            <Select
-                value={filters.type || ""}
-                onValueChange={(value) => onChange("type", value)}
-            >
-                <SelectTrigger className="h-10 w-full bg-white px-3 text-sm">
-                    <SelectValue placeholder="All Types" />
-                </SelectTrigger>
+            {/* Type */}
+            <FilterSelect label="Type" value={filters.type} onChange={(v) => onChange("type", v)}>
+                <option value="All">All</option>
+                <option value="INCOME">Income</option>
+                <option value="EXPENSE">Expense</option>
+            </FilterSelect>
 
-                <SelectContent className="z-50 bg-white ">
-                    <SelectItem value="All" className="cursor-pointer">
-                        All
-                    </SelectItem>
-                    <SelectItem value="INCOME" className="cursor-pointer">
-                        Income
-                    </SelectItem>
-                    <SelectItem value="EXPENSE" className="cursor-pointer">
-                        Expense
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+            {/* Timeframe (placeholder) */}
+            <FilterSelect label="Timeframe" value="" onChange={() => {}}>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+            </FilterSelect>
 
+            {/* Bill Type / Payment Type */}
+            <FilterSelect label="Bill Type" value={filters.paymentType} onChange={(v) => onChange("paymentType", v)}>
+                <option value="ONE_TIME">One Time</option>
+                <option value="INSTALLMENT">Installment</option>
+            </FilterSelect>
 
-            {/* CATEGORY
-            <Select
-                value={filters.category || ""}
-                onValueChange={(value) =>
-                    onChange("category", value)
-                }
-            >
-                <SelectTrigger className="h-10 w-full bg-white px-3 text-sm">
-                    <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-
-                <SelectContent className="z-50 max-h-60">
-                    {categories.map((category) => (
-                        <SelectItem
-                            key={category.id}
-                            value={String(category.id)}
-                            className="cursor-pointer"
-                        >
-                            {category.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select> */}
-
-
-            {/* CATEGORY - SEARCHABLE */}
-            {/* <SearchableSelect 
+            {/* Category */}
+            <FilterSearchable
+                label="Category"
                 value={filters.category}
-                onChange={(value) =>
-                    onChange("category", value)
-                }
+                onChange={(v) => onChange("category", v)}
                 options={categoryOptions}
-                placeholder="All Categories"
-                searchPlaceholder="Search category..."
-            /> */}
-
-            <SearchableDropdown
-                value={filters.category}
-                onChange={(value) => onChange("category", value)}
-                options={categoryOptions}
-                placeholder="All Categories"
+                placeholder="All"
             />
 
+            {/* Payment Method */}
+            <FilterSelect label="Payment Method" value={filters.paymentMethod} onChange={(v) => onChange("paymentMethod", v)}>
+                <option value="CASH">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="BANK_TRANSFER">Bank Transfer</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="CREDIT_CARD">Credit Card</option>
+            </FilterSelect>
 
+            {/* Payment Status */}
+            <FilterSelect label="Payment Status" value={filters.paymentStatus} onChange={(v) => onChange("paymentStatus", v)}>
+                <option value="PENDING">Pending</option>
+                <option value="PARTIAL">Partial</option>
+                <option value="COMPLETE">Complete</option>
+            </FilterSelect>
 
-            {/* PAYMENT TYPE */}
-            <Select
-                value={filters.paymentType || ""}
-                onValueChange={(value) =>
-                    onChange("paymentType", value)
-                }
-            >
-                <SelectTrigger className="h-10 w-full bg-white px-3 text-sm">
-                    <SelectValue placeholder="Payment Type" />
-                </SelectTrigger>
-
-                <SelectContent className="z-50 bg-white ">
-                    <SelectItem
-                        value="ONE_TIME"
-                        className="cursor-pointer"
-                    >
-                        One Time
-                    </SelectItem>
-
-                    <SelectItem
-                        value="INSTALLMENT"
-                        className="cursor-pointer"
-                    >
-                        Installment
-                    </SelectItem>
-                </SelectContent>
-            </Select>
-
-
-            {/* PAYMENT STATUS */}
-            <Select
-                value={filters.paymentStatus || ""}
-                onValueChange={(value) =>
-                    onChange("paymentStatus", value)
-                }
-            >
-                <SelectTrigger className="h-10 w-full bg-white px-3 text-sm">
-                    <SelectValue placeholder="Payment Status" />
-                </SelectTrigger>
-
-                <SelectContent className="z-50 bg-white ">
-                    {["PENDING", "PARTIAL", "COMPLETE"].map(
-                        (status) => (
-                            <SelectItem
-                                key={status}
-                                value={status}
-                                className="cursor-pointer"
-                            >
-                                {status}
-                            </SelectItem>
-                        )
-                    )}
-                </SelectContent>
-            </Select>
-
-
-            {/* CONTACT */}
-            {/* <Select
-                value={filters.contact || ""}
-                onValueChange={(value) =>
-                    onChange("contact", value)
-                }
-            >
-                <SelectTrigger className="h-10 w-full bg-white px-3 text-sm">
-                    <SelectValue placeholder="Contact" />
-                </SelectTrigger>
-
-                <SelectContent className="z-50 max-h-60">
-                    {contacts.map((contact) => (
-                        <SelectItem
-                            key={contact.id}
-                            value={String(contact.id)}
-                            className="cursor-pointer"
-                        >
-                            {contact.name}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select> */}
-
-
-            {/* CONTACT - SEARCHABLE */}
-            {/* <SearchableSelect
+            {/* User / Contact */}
+            <FilterSearchable
+                label="User"
                 value={filters.contact}
-                onChange={(value) =>
-                    onChange("contact", value)
-                }
+                onChange={(v) => onChange("contact", v)}
                 options={contactOptions}
-                placeholder="All Contacts"
-                searchPlaceholder="Search contact..."
-            /> */}
-
-
-            {/*Searchable Dropdown*/}
-            <SearchableDropdown
-                value={filters.contact}
-                onChange={(value) => onChange("contact", value)}
-                options={contactOptions}
-                placeholder="All Contacts"
+                placeholder="All"
             />
 
+            {/* Department (placeholder) */}
+            {/* <FilterSelect label="Department" value="" onChange={() => {}}>
+                <option value="all">All</option>
+            </FilterSelect> */}
 
-            {/* CLEAR */}
-            <Button
+            {/* Clear */}
+            <button
                 type="button"
-                variant="outline"
-                className="h-10 w-full whitespace-nowrap hover:bg-gray-200"
                 onClick={onClear}
+                className="h-full min-h-[56px] border border-gray-300 rounded text-sm text-gray-500 hover:bg-gray-50 transition-colors px-3"
             >
-                Clear Filters
-            </Button>
-
+                Clear
+            </button>
         </div>
     );
 }

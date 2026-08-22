@@ -1,113 +1,100 @@
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { IndianRupee } from "lucide-react";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 const fmt = (v) =>
-    Number(v ?? 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
+    Number(v ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const fmtDate = (d) =>
-    d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+    d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // STATUS BADGE
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 const StatusBadge = ({ status }) => {
     const map = {
-        COMPLETE: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        PAID: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        PARTIAL: "bg-amber-100  text-amber-700  border-amber-200",
-        PENDING: "bg-red-100    text-red-700    border-red-200",
+        COMPLETE: "bg-green-100 text-green-700 border-green-200",
+        PAID: "bg-green-100 text-green-700 border-green-200",
+        PARTIAL: "bg-amber-100 text-amber-700 border-amber-200",
+        PENDING: "bg-red-100 text-red-600 border-red-200",
     };
     return (
-        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold border ${map[status] ?? "bg-slate-100 text-slate-700"}`}>
+        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold border ${map[status] ?? "bg-gray-100 text-gray-600"}`}>
             {status}
         </span>
     );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// INSTALLMENT BADGE  (shown in Type column like the screenshot)
+// ─────────────────────────────────────────────────────────────
+
+const InstallmentBadge = ({ onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex px-2 py-0.5 rounded border text-xs font-semibold
+                   bg-orange-100 text-orange-700 border-orange-200
+                   hover:bg-orange-200 transition-colors cursor-pointer"
+    >
+        Installment
+    </button>
+);
+
+// ─────────────────────────────────────────────────────────────
 // INSTALLMENT DETAIL CELL
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 const InstallmentCell = ({ installments = [], onPay }) => {
-    if (!installments.length) {
-        return <span className="text-xs text-muted-foreground">Not scheduled</span>;
-    }
+    if (!installments.length) return <span className="text-xs text-gray-400">—</span>;
 
     return (
-        <div className="space-y-2 min-w-[260px]">
+        <div className="space-y-2 min-w-[240px]">
             {installments.map((inst) => (
-                <div
-                    key={inst.id}
-                    className="rounded-lg border bg-slate-50 p-2.5 text-xs space-y-1.5"
-                >
-                    {/* Header row */}
+                <div key={inst.id} className="rounded border bg-gray-50 p-2 text-xs space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-slate-700">
-                            #{inst.installmentNumber}
-                        </span>
+                        <span className="font-semibold text-gray-700">#{inst.installmentNumber}</span>
                         <StatusBadge status={inst.status} />
                         {inst.status !== "PAID" && (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 text-xs px-2 border-slate-300 hover:bg-slate-100"
+                            <button
+                                className="h-6 text-xs px-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
                                 onClick={() => onPay(inst)}
                             >
                                 Pay
-                            </Button>
+                            </button>
                         )}
                     </div>
-
-                    {/* Amount rows */}
                     <div className="grid grid-cols-3 gap-1 text-[11px]">
                         <div className="text-center">
-                            <p className="text-muted-foreground">Due</p>
+                            <p className="text-gray-400">Due</p>
                             <p className="font-medium">₹{fmt(inst.dueAmount)}</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-muted-foreground">Paid</p>
-                            <p className="font-medium text-emerald-600">₹{fmt(inst.paidAmount)}</p>
+                            <p className="text-gray-400">Paid</p>
+                            <p className="font-medium text-green-600">₹{fmt(inst.paidAmount)}</p>
                         </div>
                         <div className="text-center">
-                            <p className="text-muted-foreground">Pending</p>
-                            <p className={`font-medium ${Number(inst.pendingAmount) > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                            <p className="text-gray-400">Pending</p>
+                            <p className={`font-medium ${Number(inst.pendingAmount) > 0 ? "text-red-600" : "text-green-600"}`}>
                                 ₹{fmt(inst.pendingAmount)}
                             </p>
                         </div>
                     </div>
-
-                    <div className="text-muted-foreground text-[11px]">
-                        Due: {fmtDate(inst.dueDate)}
-                    </div>
-
-                    {/* Payment history (collapsed if empty) */}
+                    <div className="text-gray-400 text-[11px]">Due: {fmtDate(inst.dueDate)}</div>
                     {inst.payments?.length > 0 && (
                         <details className="mt-1">
-                            <summary className="cursor-pointer text-[11px] text-slate-500 hover:text-slate-700">
+                            <summary className="cursor-pointer text-[11px] text-gray-400 hover:text-gray-600">
                                 {inst.payments.length} payment{inst.payments.length > 1 ? "s" : ""}
                             </summary>
-                            <div className="mt-1 space-y-1 pl-2 border-l-2 border-slate-200">
+                            <div className="mt-1 space-y-1 pl-2 border-l-2 border-gray-200">
                                 {inst.payments.map((p) => (
                                     <div key={p.id} className="flex justify-between text-[11px]">
-                                        <span className="text-muted-foreground">{fmtDate(p.paymentDate)}</span>
-                                        <span className="text-emerald-600 font-medium">+₹{fmt(p.amount)}</span>
+                                        <span className="text-gray-400">{fmtDate(p.paymentDate)}</span>
+                                        <span className="text-green-600 font-medium">+₹{fmt(p.amount)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -119,130 +106,139 @@ const InstallmentCell = ({ installments = [], onPay }) => {
     );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN TABLE
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// TABLE HEADERS
+// ─────────────────────────────────────────────────────────────
 
-export default function TransactionTable({ expenses, onPayInstallment }) {
-    const sortedExpenses = [...expenses].sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-    );
+const HEADERS = [
+    "✓", "Index", "Date", "User", "Category", "Particular",
+    "Amount", "GST Amt", "TDS Amount", "Total (+GST)",
+    "Paid", "Pending", "Bill Type", "Status", "Branch",
+];
+
+// ─────────────────────────────────────────────────────────────
+// MAIN TABLE
+// ─────────────────────────────────────────────────────────────
+
+export default function TransactionTable({ expenses, onPayInstallment, onViewInstallments, }) {
+    const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
-        <div className="rounded-xl border overflow-x-auto shadow-sm">
-            <Table>
-                <TableHeader className="bg-slate-100">
-                    <TableRow>
-                        {[
-                            "#", "Date", "Type", "Contact", "Category",
-                            "Particular", "Amount", "GST%", "GST Amt", "TDS%",
-                            "Total", "Paid", "Pending", "Payment Type",
-                            "Payment Method",
-                            "Status", "Installments", "Remark",
-                        ].map((h) => (
-                            <TableHead key={h} className="border-r last:border-r-0 text-xs font-semibold text-slate-600 whitespace-nowrap">
+        <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+                <thead>
+                    <tr className="bg-[#4A90D9] text-white">
+                        {HEADERS.map((h) => (
+                            <th
+                                key={h}
+                                className="px-3 py-3 text-center font-semibold border-r border-[#3a7fc1] last:border-r-0 whitespace-nowrap"
+                            >
                                 {h}
-                            </TableHead>
+                            </th>
                         ))}
-                    </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                    {expenses.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={18} className="text-center py-12 text-muted-foreground text-sm">
+                    </tr>
+                </thead>
+                <tbody>
+                    {sorted.length === 0 && (
+                        <tr>
+                            <td colSpan={HEADERS.length} className="text-center py-12 text-gray-400">
                                 No transactions found.
-                            </TableCell>
-                        </TableRow>
+                            </td>
+                        </tr>
                     )}
+                    {sorted.map((exp, i) => (
+                        <tr
+                            key={exp.id}
+                            className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors"
+                        >
+                            {/* Checkmark */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100">
+                                <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+                            </td>
 
-                    {expenses.map((exp, i) => (
-                        <TableRow key={exp.id} className="hover:bg-slate-50/50 transition-colors">
-
-                            <TableCell className="border-r text-xs text-muted-foreground font-medium">
+                            {/* Index */}
+                            <td className="px-3 py-3 text-center text-gray-500 border-r border-gray-100">
                                 {i + 1}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs whitespace-nowrap">
+                            {/* Date */}
+                            <td className="px-3 py-3 text-center whitespace-nowrap border-r border-gray-100">
                                 {fmtDate(exp.date)}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r">
-                                <span className={`text-xs font-semibold ${exp.type === "INCOME" ? "text-emerald-600" : "text-red-500"}`}>
-                                    {exp.type}
+                            {/* User (clickable link style) */}
+                            <td className="px-3 py-3 border-r border-gray-100 whitespace-nowrap">
+                                <span className="text-[#4A90D9] font-medium">
+                                    {exp.contact?.name || "—"}
                                 </span>
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs whitespace-nowrap">
-                                {exp.contact?.name || "—"}
-                            </TableCell>
-
-                            <TableCell className="border-r text-xs whitespace-nowrap">
+                            {/* Category */}
+                            <td className="px-3 py-3 border-r border-gray-100 whitespace-nowrap">
                                 {exp.category?.name || "—"}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs max-w-[120px] truncate">
+                            {/* Particular */}
+                            <td className="px-3 py-3 border-r border-gray-100 max-w-[100px] truncate">
                                 {exp.particular || "—"}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right">₹{fmt(exp.amount)}</TableCell>
+                            {/* Amount */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100">
+                                ₹{fmt(exp.amount)}
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right">
-                                {Number(exp.gstPercentage ?? 0).toFixed(1)}%
-                            </TableCell>
+                            {/* GST Amt */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100">
+                                ₹{fmt(exp.gstAmount)}
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right">₹{fmt(exp.gstAmount)}</TableCell>
+                            {/* TDS */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100">
+                                ₹{fmt(exp.tdsAmount)}
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right">
-                                {Number(exp.tdsPercentage ?? 0).toFixed(1)}%
-                            </TableCell>
-
-                            <TableCell className="border-r text-xs text-right font-semibold">
+                            {/* Total */}
+                            <td className="px-3 py-3 text-center font-semibold border-r border-gray-100">
                                 ₹{fmt(exp.total)}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right text-emerald-600 font-medium">
+                            {/* Paid */}
+                            <td className="px-3 py-3 text-center text-green-600 font-medium border-r border-gray-100">
                                 ₹{fmt(exp.paid)}
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs text-right font-medium">
-                                <span className={Number(exp.pending) > 0 ? "text-red-500" : "text-emerald-600"}>
+                            {/* Pending */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100">
+                                <span className={Number(exp.pending) > 0 ? "text-red-500 font-medium" : "text-green-600 font-medium"}>
                                     ₹{fmt(exp.pending)}
                                 </span>
-                            </TableCell>
+                            </td>
 
-                            <TableCell className="border-r text-xs whitespace-nowrap">
-                                {exp.paymentType === "ONE_TIME" ? "One Time" : "Installment"}
-                            </TableCell>
-                            <TableCell className="border-r text-xs whitespace-nowrap">
-                                {exp.paymentMethod
-                                    ? exp.paymentMethod.replaceAll("_", " ")
-                                    : "—"}
-                            </TableCell>
-
-
-                            <TableCell className="border-r">
-                                <StatusBadge status={exp.paymentStatus} />
-                            </TableCell>
-
-                            <TableCell className="border-r">
+                            {/* Bill Type / Payment Type */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100 whitespace-nowrap">
                                 {exp.paymentType === "INSTALLMENT" ? (
-                                    <InstallmentCell
-                                        installments={exp.installments || []}
-                                        onPay={(installment) => onPayInstallment(exp, installment)}
+                                    <InstallmentBadge
+                                        onClick={() => onViewInstallments(exp)}
                                     />
                                 ) : (
-                                    <span className="text-xs text-muted-foreground">—</span>
+                                    exp.paymentMethod || "-"
                                 )}
-                            </TableCell>
-
-                            <TableCell className="text-xs max-w-[140px] truncate text-muted-foreground">
-                                {exp.remark || "—"}
-                            </TableCell>
-                        </TableRow>
+                            </td>
+                            {/* Status */}
+                            <td className="px-3 py-3 text-center border-r border-gray-100 whitespace-nowrap">
+                                <StatusBadge status={exp.paymentStatus} />
+                            </td>
+                            {/* Branch */}
+                            <td className="px-3 py-3 text-center whitespace-nowrap">
+                                <span className="bg-blue-100 text-[#4A90D9] text-[10px] font-semibold px-2 py-0.5 rounded">
+                                    {exp.branchName || "Pune Bro..."}
+                                </span>
+                            </td>
+                        </tr>
                     ))}
-                </TableBody>
-            </Table>
+                </tbody>
+            </table>
         </div>
     );
 }

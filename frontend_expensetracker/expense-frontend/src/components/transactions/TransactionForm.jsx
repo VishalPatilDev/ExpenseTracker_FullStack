@@ -1,18 +1,50 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
 import SearchableDropdown from "../filters/SearchableDropdown";
+
+// ─────────────────────────────────────────────────────────────
+// Shared styled primitives to match PJSOFTTECH outlined inputs
+// ─────────────────────────────────────────────────────────────
+
+const OutlinedField = ({ label, children }) => (
+    <div className="relative border border-gray-300 rounded px-3 pt-5 pb-2 focus-within:border-[#4A90D9] transition-colors">
+        <span className="absolute top-1 left-3 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
+            {label}
+        </span>
+        {children}
+    </div>
+);
+
+const OutlinedSelect = ({ label, value, onChange, children }) => (
+    <OutlinedField label={label}>
+        <select
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-transparent text-sm text-gray-700 focus:outline-none"
+        >
+            {children}
+        </select>
+    </OutlinedField>
+);
+
+const OutlinedInput = ({ label, type = "text", value, onChange, placeholder, min, max, step, required }) => (
+    <OutlinedField label={label}>
+        <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder ?? ""}
+            min={min}
+            max={max}
+            step={step}
+            required={required}
+            className="w-full bg-transparent text-sm text-gray-700 focus:outline-none placeholder:text-gray-300"
+        />
+    </OutlinedField>
+);
+
+// ─────────────────────────────────────────────────────────────
+// TransactionForm
+// ─────────────────────────────────────────────────────────────
 
 export default function TransactionForm({
     form,
@@ -28,374 +60,196 @@ export default function TransactionForm({
     onPaymentTypeChange,
     onPaymentMethodChange,
     onSubmit,
+    installmentScheduleConfirmed,
+    onEditSchedule,
 }) {
     return (
-        <form onSubmit={onSubmit} className="space-y-2">
+        <form onSubmit={onSubmit} className="space-y-5">
 
-            {/* BASIC INFORMATION */}
+            {/* ── Row 1: Type | User | Date | Category ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <OutlinedSelect label="Type" value={form.type} onChange={(v) => onChange("type", v)}>
+                    <option value="EXPENSE">Expense</option>
+                    <option value="INCOME">Income</option>
+                </OutlinedSelect>
 
-            <div className="grid gap-4 md:grid-cols-5">
-
-                <Field label="Type">
-                    <Select
-                        value={form.type}
-                        onValueChange={(value) =>
-                            onChange("type", value)
-                        }
-                    >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-
-                        <SelectContent className='bg-white'>
-                            <SelectItem value="EXPENSE">
-                                Expense
-                            </SelectItem>
-
-                            <SelectItem value="INCOME">
-                                Income
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-
-                <Field label="User / Contact">
-                    {/* <Select
-                        value={form.contactId}
-                        onValueChange={(value) =>
-                            onChange("contactId", value)
-                        }
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select contact" />
-                        </SelectTrigger>
-
-                        <SelectContent className='bg-white'>
-                            {contacts.map((contact) => (
-                                <SelectItem
-                                    key={contact.id}
-                                    value={String(contact.id)}
-                                >
-                                    {contact.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select> */}
+                {/* User searchable */}
+                <OutlinedField label="User">
                     <SearchableDropdown
                         value={form.contactId}
-                        onChange={(value) => onChange("contactId", value)}
+                        onChange={(v) => onChange("contactId", v)}
                         placeholder="Select contact"
-                        options={contacts.map((contact) => ({
-                            value: contact.id,
-                            label: contact.name,
-                        }))}
+                        options={contacts.map((c) => ({ value: c.id, label: c.name }))}
+                        minimal
                     />
-                </Field>
+                </OutlinedField>
 
-                <Field label="Date">
-                    <Input
-                        type="date"
-                        value={form.date}
-                        onChange={(e) =>
-                            onChange("date", e.target.value)
-                        }
-                    />
-                </Field>
+                <OutlinedInput
+                    label="Date"
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => onChange("date", e.target.value)}
+                />
 
-                <Field label="Category">
-                    {/* <Select
-                        value={form.categoryId}
-                        onValueChange={(value) =>
-                            onChange("categoryId", value)
-                        }
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-
-                        <SelectContent className='bg-white'>
-                            {categories.map((category) => (
-                                <SelectItem
-                                    key={category.id}
-                                    value={String(category.id)}
-                                >
-                                    {category.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select> */}
+                {/* Category searchable */}
+                <OutlinedField label="Category">
                     <SearchableDropdown
                         value={form.categoryId}
-                        onChange={(value) => onChange("categoryId", value)}
-                        placeholder="Select Category"
-                        options={categories.map((category) => ({
-                            value: category.id,
-                            label: category.name,
-                        }))}
+                        onChange={(v) => onChange("categoryId", v)}
+                        placeholder="Select category"
+                        options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                        minimal
                     />
-                </Field>
+                </OutlinedField>
+            </div>
 
-                <Field label="Bank">
-                    {/* <Select
-                        value={form.bankId}
-                        onValueChange={(value) =>
-                            onChange("bankId", value)
-                        }
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select bank" />
-                        </SelectTrigger>
+            {/* ── Row 2: Particular | Amount | GST checkbox | TDS checkbox ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-start">
+                <OutlinedInput
+                    label="Particular"
+                    value={form.particular}
+                    onChange={(e) => onChange("particular", e.target.value)}
+                    placeholder=""
+                />
 
-                        <SelectContent className='bg-white'>
-                            {banks.map((bank) => (
-                                <SelectItem
-                                    key={bank.id}
-                                    value={String(bank.id)}
-                                >
-                                    {bank.name}
-                                    {bank.branch
-                                        ? ` - ${bank.branch}`
-                                        : ""}
-                                    {bank.accountNumber
-                                        ? ` (${bank.accountNumber})`
-                                        : ""}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select> */}
-                    <SearchableDropdown
-                        value={form.bankId}
-                        onChange={(value) => onChange("bankId", value)}
-                        placeholder="Select bank"
-                        options={banks.map((bank) => ({
-                            value: bank.id,
-                            label: `${bank.name}${
-            bank.branch ? ` - ${bank.branch}` : ""
-        }${
-            bank.accountNumber ? ` (${bank.accountNumber})` : ""
-        }`,
-                        }))}
-                    />
-                </Field>
+                <OutlinedInput
+                    label="Amount"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.amount}
+                    onChange={(e) => onChange("amount", e.target.value)}
+                />
 
-                <Field label="Particular">
-                    <Input
-                        placeholder="Enter particular"
-                        value={form.particular}
-                        onChange={(e) =>
-                            onChange(
-                                "particular",
-                                e.target.value
-                            )
-                        }
-                    />
-                </Field>
-
-                <Field label="Amount">
-                    <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="Enter amount"
-                        value={form.amount}
-                        onChange={(e) =>
-                            onChange(
-                                "amount",
-                                e.target.value
-                            )
-                        }
-                    />
-                </Field>
-                <div className="space-y-4 rounded-lg border p-4">
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            checked={hasGst}
-                            onCheckedChange={onGstChange}
-                        />
-
-                        <Label>Apply GST</Label>
-                    </div>
-
+                {/* GST */}
+                <div className="border border-gray-300 rounded px-3 pt-4 pb-3 space-y-2 focus-within:border-[#4A90D9]">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox checked={hasGst} onCheckedChange={onGstChange} />
+                        <span className="text-sm text-gray-600 font-medium">GST %</span>
+                    </label>
                     {hasGst && (
-                        <div className="grid gap-4 md:grid-cols-2">
-
-                            <Field label="GST %">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.01"
-                                    value={form.gstPercentage}
-                                    onChange={(e) =>
-                                        onChange(
-                                            "gstPercentage",
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </Field>
-
-                            <Field label="GST Number">
-                                <Input
-                                    value={form.gstNumber}
-                                    placeholder="GST number"
-                                    onChange={(e) =>
-                                        onChange(
-                                            "gstNumber",
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </Field>
-
+                        <div className="space-y-2">
+                            <input
+                                type="number" min="0" max="100" step="0.01"
+                                value={form.gstPercentage}
+                                onChange={(e) => onChange("gstPercentage", e.target.value)}
+                                placeholder="GST %"
+                                className="w-full border-b border-gray-200 text-sm py-1 focus:outline-none focus:border-[#4A90D9]"
+                            />
+                            <input
+                                type="text"
+                                value={form.gstNumber}
+                                onChange={(e) => onChange("gstNumber", e.target.value)}
+                                placeholder="GST Number"
+                                className="w-full border-b border-gray-200 text-sm py-1 focus:outline-none focus:border-[#4A90D9]"
+                            />
                         </div>
                     )}
                 </div>
 
-                <div className="space-y-4 rounded-lg border p-4">
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            checked={hasTds}
-                            onCheckedChange={onTdsChange}
-                        />
-
-                        <Label>Apply TDS</Label>
-                    </div>
-
+                {/* TDS */}
+                <div className="border border-gray-300 rounded px-3 pt-4 pb-3 space-y-2 focus-within:border-[#4A90D9]">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox checked={hasTds} onCheckedChange={onTdsChange} />
+                        <span className="text-sm text-gray-600 font-medium">TDS %</span>
+                    </label>
                     {hasTds && (
-                        <Field label="TDS %">
-                            <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                value={form.tdsPercentage}
-                                onChange={(e) =>
-                                    onChange(
-                                        "tdsPercentage",
-                                        e.target.value
-                                    )
-                                }
-                            />
-                        </Field>
+                        <input
+                            type="number" min="0" max="100" step="0.01"
+                            value={form.tdsPercentage}
+                            onChange={(e) => onChange("tdsPercentage", e.target.value)}
+                            placeholder="TDS %"
+                            className="w-full border-b border-gray-200 text-sm py-1 focus:outline-none focus:border-[#4A90D9]"
+                        />
                     )}
                 </div>
-
             </div>
 
-            {/* TAX */}
+            {/* ── Row 3: Total | Payment Status | Bank ── */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 items-center">
 
-            {/* <div className="grid gap-3 md:grid-cols-3">
+                {/* Total (read-only) */}
+                <OutlinedField label="Total">
+                    <p className="text-sm text-gray-700 font-semibold">
+                        {Number(form.total).toLocaleString("en-IN")}
+                    </p>
+                </OutlinedField>
+
+                {/* Payment Type = Payment Status in the screenshot */}
+                <OutlinedSelect label="Payment Status" value={form.paymentType} onChange={onPaymentTypeChange}>
+                    <option value="ONE_TIME">One Time</option>
+                    <option value="INSTALLMENT">Installment</option>
+                </OutlinedSelect>
 
                 
-            </div> */}
-
-            {/* TOTAL + PAYMENT */}
-
-            <div className="grid gap-4 md:grid-cols-3 items-center justify-center">
-
-                <div className="rounded-lg bg-muted p-4">
-                    <p className="text-sm text-muted-foreground">
-                        Total Amount
-                    </p>
-
-                    <p className="text-2xl font-bold">
-                        ₹
-                        {Number(
-                            form.total
-                        ).toLocaleString("en-IN")}
-                    </p>
-                </div>
-                <Field label="Payment Method">
-                    <Select
-                        value={form.paymentMethod}
-                        onValueChange={onPaymentMethodChange}
-                    >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-
-                        <SelectContent className='bg-white'>
-                            <SelectItem value="CASH">
-                                CASH
-                            </SelectItem>
-
-                            <SelectItem value="UPI">
-                                UPI
-                            </SelectItem>
-                            <SelectItem value="BANK_TRANSFER">
-                                BANK TRANSFER
-                            </SelectItem>
-                            <SelectItem value="CHEQUE">
-                                CHEQUE
-                            </SelectItem>
-                            <SelectItem value="CREDIT_CARD">
-                                CREDIT_CARD
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-
-                <Field label="Payment Type">
-                    <Select
-                        value={form.paymentType}
-                        onValueChange={onPaymentTypeChange}
-                    >
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-
-                        <SelectContent className='bg-white'>
-                            <SelectItem value="ONE_TIME">
-                                One Time Payment
-                            </SelectItem>
-
-                            <SelectItem value="INSTALLMENT">
-                                Pay in Installments
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-
             </div>
 
-            {/* REMARK */}
+            {/* ── Payment method ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <OutlinedSelect label="Payment Method" value={form.paymentMethod} onChange={onPaymentMethodChange}>
+                    <option value="CASH">CASH</option>
+                    <option value="UPI">UPI</option>
+                    <option value="BANK_TRANSFER">BANK TRANSFER</option>
+                    <option value="CHEQUE">CHEQUE</option>
+                    <option value="CREDIT_CARD">CREDIT CARD</option>
+                </OutlinedSelect>
 
-            <Field label="Remark">
-                <Textarea
+                {/* Installment confirmed badge */}
+                {form.paymentType === "INSTALLMENT" && installmentScheduleConfirmed && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-green-600 font-semibold bg-green-50 border border-green-200 px-3 py-1.5 rounded-full">
+                            ✓ Schedule set
+                        </span>
+                        <button type="button" onClick={onEditSchedule} className="text-xs text-[#4A90D9] underline">
+                            Edit
+                        </button>
+                    </div>
+                )}
+                {form.paymentMethod === "BANK_TRANSFER" && (
+                 
+                <OutlinedField label="Bank">
+                    <SearchableDropdown
+                        value={form.bankId}
+                        onChange={(v) => onChange("bankId", v)}
+                        placeholder="Select bank"
+                        options={banks.map((b) => ({
+                            value: b.id,
+                            label: `${b.name}${b.branch ? ` - ${b.branch}` : ""}${b.accountNumber ? ` (${b.accountNumber})` : ""}`,
+                        }))}
+                        minimal
+                    />
+                </OutlinedField>
+                )}
+            </div>
+
+            {/* ── Remark ── */}
+            <OutlinedField label="Remark">
+                <textarea
                     rows={3}
-                    placeholder="Add an optional remark..."
                     value={form.remark}
-                    onChange={(e) =>
-                        onChange(
-                            "remark",
-                            e.target.value
-                        )
-                    }
+                    onChange={(e) => onChange("remark", e.target.value)}
+                    placeholder=""
+                    className="w-full bg-transparent text-sm text-gray-700 focus:outline-none resize-none"
                 />
-            </Field>
+            </OutlinedField>
 
-            {/* SUBMIT */}
-
-            <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-blue-100 hover:bg-blue-300"
-            >
-                {submitting
-                    ? "Saving..."
-                    : "Save Transaction"}
-            </Button>
-
+            {/* ── Actions ── */}
+            <div className="flex justify-end gap-3 pt-2">
+                <button
+                    type="button"
+                    onClick={() => window.history.back()}
+                    className="text-sm font-medium text-[#4A90D9] hover:underline px-4 py-2"
+                >
+                    CANCEL
+                </button>
+                <button
+                    type="submit"
+                    disabled={submitting}
+                    className="bg-[#4A90D9] hover:bg-[#3a7fc1] disabled:opacity-60 text-white text-sm font-semibold px-8 py-2 rounded transition-colors"
+                >
+                    {submitting ? "Saving..." : "SAVE"}
+                </button>
+            </div>
         </form>
-    );
-}
-
-function Field({ label, children }) {
-    return (
-        <div className="space-y-2">
-            <Label>{label}</Label>
-            {children}
-        </div>
     );
 }

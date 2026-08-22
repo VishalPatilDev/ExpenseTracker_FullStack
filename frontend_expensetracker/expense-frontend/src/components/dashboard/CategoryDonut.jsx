@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 export default function CategoryDonut({
     data,
     total,
-    formatAmount,
+    formatAmount,   
 }) {
     if (!data.length) {
         return (
