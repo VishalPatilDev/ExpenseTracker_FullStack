@@ -4,6 +4,7 @@ import com.pjsofttech.expensetracker.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -33,7 +34,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         return http.csrf(c->c.disable())
 
-                .authorizeHttpRequests(a->a.requestMatchers("/pjsofttech_welcome/login","/pjsofttech_welcome/health","/pjsofttech_welcome/register","/pjsofttech_welcome").permitAll()
+                .authorizeHttpRequests(a->a
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**","/pjsofttech_welcome/login","/pjsofttech_welcome/health","/pjsofttech_welcome/register","/pjsofttech_welcome/**").permitAll()
                         .anyRequest().authenticated())
                 .cors(Customizer.withDefaults())
                 .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class)
