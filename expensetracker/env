@@ -1,4 +1,4 @@
-DB_URL=jdbc:mysql://mysql.railway.internal:3306/railway
+DB_URL=jdbc:mysql://tokaido.proxy.rlwy.net:11196/railway
 DB_USERNAME=root
 DB_PASSWORD=ArdxiqKNFmBwuOTQMVAdbXNKBPzJsLWE
 FRONTEND_URL=https://i-track-expense.netlify.app
