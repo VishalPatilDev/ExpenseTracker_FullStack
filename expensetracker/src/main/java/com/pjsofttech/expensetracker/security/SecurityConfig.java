@@ -35,8 +35,15 @@ public class SecurityConfig {
         return http.csrf(c->c.disable())
 
                 .authorizeHttpRequests(a->a
-                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**","/pjsofttech_welcome/login","/pjsofttech_welcome/health","/pjsofttech_welcome/register","/pjsofttech_welcome/**").permitAll()
+                        // CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public authentication endpoints
+                        .requestMatchers(
+                                "/pjsofttech_welcome/login",
+                                "/pjsofttech_welcome/register",
+                                "/pjsofttech_welcome/health"
+                        ).permitAll()
                         .anyRequest().authenticated())
                 .cors(Customizer.withDefaults())
                 .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class)
