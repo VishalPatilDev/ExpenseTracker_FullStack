@@ -67,6 +67,12 @@ function App() {
             <Settings />
           </>
         </ProtectedRoute>}></Route>
+        <Route path='/expense/edit/:id' element={<ProtectedRoute>
+          <>
+            <Navbar />
+            <Expense />
+          </>
+        </ProtectedRoute>}></Route>
       </Routes>
     </>
   )

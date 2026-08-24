@@ -78,7 +78,7 @@ export default function List() {
     const [loading, setLoading] = useState(true);
 
     const [filters, setFilters] = useState({
-        type: "", category: "", paymentType: "", paymentMethod: "", paymentStatus: "", contact: "",
+        type: "", timeframe: "", category: "", paymentType: "", paymentMethod: "", paymentStatus: "", contact: "",
     });
 
     // Payment modal
@@ -87,9 +87,17 @@ export default function List() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentForm, setPaymentForm] = useState(emptyPaymentForm());
     const [submitting, setSubmitting] = useState(false);
+    const handleEditExpense = (expense) => {
+        navigate(`/expense/edit/${expense.id}`);
+    };
 
 
-    useEffect(() => { fetchData(), setCurrentPage(1); }, [search, filters, itemsPerPage]);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    useEffect(() => { setCurrentPage(1); }, [search, filters, itemsPerPage]);
 
     const openInstallmentDialog = (expense) => {
         setInstallmentExpense(expense);
@@ -113,11 +121,139 @@ export default function List() {
         setShowInstallmentDialog(false);
         setInstallmentExpense(null);
     };
+    const isInTimeframe = (dateValue, timeframe) => {
+        if (!timeframe) return true;
+
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return false;
+
+        const now = new Date();
+
+        // Remove time from dates
+        const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+        );
+
+        const target = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+        );
+
+        switch (timeframe) {
+            case "TODAY":
+                return target.getTime() === today.getTime();
+
+            case "YESTERDAY": {
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+
+                return target.getTime() === yesterday.getTime();
+            }
+
+            case "THIS_WEEK": {
+                // Monday = first day of week
+                const startOfWeek = new Date(today);
+                const day = today.getDay();
+                const diff = day === 0 ? 6 : day - 1;
+
+                startOfWeek.setDate(today.getDate() - diff);
+
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                return target >= startOfWeek && target <= endOfWeek;
+            }
+
+            case "THIS_MONTH": {
+                const startOfMonth = new Date(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    1
+                );
+
+                const endOfMonth = new Date(
+                    today.getFullYear(),
+                    today.getMonth() + 1,
+                    0
+                );
+
+                return target >= startOfMonth && target <= endOfMonth;
+            }
+
+            case "LAST_MONTH": {
+                const startOfLastMonth = new Date(
+                    today.getFullYear(),
+                    today.getMonth() - 1,
+                    1
+                );
+
+                const endOfLastMonth = new Date(
+                    today.getFullYear(),
+                    today.getMonth(),
+                    0
+                );
+
+                return (
+                    target >= startOfLastMonth &&
+                    target <= endOfLastMonth
+                );
+            }
+
+            case "THIS_YEAR": {
+                const startOfYear = new Date(
+                    today.getFullYear(),
+                    0,
+                    1
+                );
+
+                const endOfYear = new Date(
+                    today.getFullYear(),
+                    11,
+                    31
+                );
+
+                return target >= startOfYear && target <= endOfYear;
+            }
+
+            case "LAST_YEAR": {
+                const startOfLastYear = new Date(
+                    today.getFullYear() - 1,
+                    0,
+                    1
+                );
+
+                const endOfLastYear = new Date(
+                    today.getFullYear() - 1,
+                    11,
+                    31
+                );
+
+                return (
+                    target >= startOfLastYear &&
+                    target <= endOfLastYear
+                );
+            }
+
+            default:
+                return true;
+        }
+    };
+
     const filteredExpenses = expenses.filter((exp) => {
         const txt = search.toLowerCase().trim();
-        if (txt && !exp.contact?.name?.toLowerCase().includes(txt) && !exp.category?.name?.toLowerCase().includes(txt) && !exp.particular?.toLowerCase().includes(txt)) return false;
-        return [
+        if (
+            txt &&
+            !exp.contact?.name?.toLowerCase().includes(txt) &&
+            !exp.category?.name?.toLowerCase().includes(txt) &&
+            !exp.particular?.toLowerCase().includes(txt)
+        ) { return false; } return [
             !filters.type || filters.type === "All" || exp.type === filters.type,
+            // Timeframe
+            !filters.timeframe ||
+            isInTimeframe(exp.date, filters.timeframe),
             !filters.category || String(exp.category?.id) === filters.category,
             !filters.paymentType || exp.paymentType === filters.paymentType,
             !filters.paymentMethod || exp.paymentMethod === filters.paymentMethod,
@@ -150,7 +286,7 @@ export default function List() {
         setFilters((prev) => ({ ...prev, [name]: value }));
 
     const clearFilters = () =>
-        setFilters({ type: "", category: "", paymentType: "", paymentMethod: "", paymentStatus: "", contact: "" });
+        setFilters({ type: "", timeframe: "", category: "", paymentType: "", paymentMethod: "", paymentStatus: "", contact: "" });
 
 
 
@@ -166,7 +302,7 @@ export default function List() {
             acc.paid += paid;
             acc.pending += pending;
             if (exp.type === "INCOME") acc.income += Number(exp.total ?? 0);
-            if (exp.type === "EXPENSE") acc.expenseRefund += 0;
+            if (exp.type === "EXPENSE") acc.expenseRefund += Number(exp.total ?? 0);
             return acc;
         },
         { gst: 0, tds: 0, paid: 0, pending: 0, income: 0, expenseRefund: 0 }
@@ -233,7 +369,7 @@ export default function List() {
     const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
     const paginatedExpenses = filteredExpenses.slice(startIndex, endIndex);
-
+    
 
     // ─────────────────────────────────────────────────────────────
     // UI
@@ -285,7 +421,7 @@ export default function List() {
                 <StatBadge label="Total TDS" value={stats.tds} color="#E91E63" />
                 <StatBadge label="Paid" value={stats.paid} color="#FF9800" />
                 <StatBadge label="Pending" value={stats.pending} color="#4CAF50" />
-                <StatBadge label="Expense Refund" value={stats.expenseRefund} color="#2196F3" />
+                <StatBadge label="Total Expense" value={stats.expenseRefund} color="#2196F3" />
                 <StatBadge label="Total Income" value={stats.income} color="#4A90D9" />
             </div>
 
@@ -307,6 +443,7 @@ export default function List() {
                         expenses={paginatedExpenses}
                         onPayInstallment={openPaymentModal}
                         onViewInstallments={openInstallmentDialog}
+                        onEdit={handleEditExpense}
                     />
                     {/* Pagination */}
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-sm text-gray-500">

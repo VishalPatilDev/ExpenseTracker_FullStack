@@ -41,7 +41,7 @@ export default function TransactionFilters({ filters, categories, contacts, onCh
     const contactOptions = contacts.map((c) => ({ value: c.id, label: c.name }));
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3 items-end">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-3  items-end">
 
             {/* Type */}
             <FilterSelect label="Type" value={filters.type} onChange={(v) => onChange("type", v)}>
@@ -51,11 +51,15 @@ export default function TransactionFilters({ filters, categories, contacts, onCh
             </FilterSelect>
 
             {/* Timeframe (placeholder) */}
-            <FilterSelect label="Timeframe" value="" onChange={() => {}}>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
+            <FilterSelect label="Timeframe" value={filters.timeframe} onChange={(v) => onChange("timeframe",v)}>
+                <option value="">All</option>
+    <option value="TODAY">Today</option>
+    <option value="YESTERDAY">Yesterday</option>
+    <option value="THIS_WEEK">This Week</option>
+    <option value="THIS_MONTH">This Month</option>
+    <option value="LAST_MONTH">Last Month</option>
+    <option value="THIS_YEAR">This Year</option>
+    <option value="LAST_YEAR">Last Year</option>
             </FilterSelect>
 
             {/* Bill Type / Payment Type */}

@@ -76,11 +76,10 @@ const Td = ({ children, center = false, className = "" }) => (
 const ActionBtn = ({ onClick, icon: Icon, danger }) => (
     <button
         onClick={onClick}
-        className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
-            danger
+        className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${danger
                 ? "text-red-500 hover:bg-red-50"
                 : "text-blue-500 hover:bg-blue-50"
-        }`}
+            }`}
     >
         <Icon className="w-3.5 h-3.5" />
     </button>
@@ -222,16 +221,16 @@ export default function Settings() {
 
     const PER_PAGE = 10;
 
-const [userPage, setUserPage] = useState(1);
-const [categoryPage, setCategoryPage] = useState(1);
-const [bankPage, setBankPage] = useState(1);
+    const [userPage, setUserPage] = useState(1);
+    const [categoryPage, setCategoryPage] = useState(1);
+    const [bankPage, setBankPage] = useState(1);
     // ── Fetch ──────────────────────────────────────────────────
     useEffect(() => {
         fetchContacts();
         fetchCategories();
         fetchBanks();
     }, []);
-    
+
 
     const fetchContacts = async () => {
         try {
@@ -335,33 +334,37 @@ const [bankPage, setBankPage] = useState(1);
 
     const confirmDelete = async () => {
         const { type, id } = deleteDialog;
+        if (!id) {
+        alert("Invalid contact ID");
+        return;
+    }
         try {
             setLoading(true);
             if (type === "contact") {
-    await api.delete(`/pjsofttech/user/${id}`);
-    setContacts((prev) => prev.filter((c) => c.id !== id));
-    setUserPage(1);
+                await api.delete(`/pjsofttech/user/${id}`);
+                setContacts((prev) => prev.filter((c) => c.id !== id));
+                setUserPage(1);
 
-    if (editingContactId === id) resetContactForm();
+                if (editingContactId === id) resetContactForm();
 
-    alert("Contact deleted successfully");
-}
+                alert("Contact deleted successfully");
+            }
 
-if (type === "category") {
-    await api.delete(`/pjsofttech/category/${id}`);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    setCategoryPage(1);
+            if (type === "category") {
+                await api.delete(`/pjsofttech/category/${id}`);
+                setCategories((prev) => prev.filter((c) => c.id !== id));
+                setCategoryPage(1);
 
-    alert("Category deleted successfully");
-}
+                alert("Category deleted successfully");
+            }
 
-if (type === "bank") {
-    await api.delete(`/pjsofttech/bank/${id}`);
-    setBanks((prev) => prev.filter((b) => b.id !== id));
-    setBankPage(1);
+            if (type === "bank") {
+                await api.delete(`/pjsofttech/bank/${id}`);
+                setBanks((prev) => prev.filter((b) => b.id !== id));
+                setBankPage(1);
 
-    alert("Bank deleted successfully");
-}   
+                alert("Bank deleted successfully");
+            }
             closeDeleteDialog();
         } catch (err) {
             alert(err.response?.data?.message || "Failed to delete");
@@ -378,19 +381,19 @@ if (type === "bank") {
         c.name?.toLowerCase().includes(categorySearch.toLowerCase())
     );
     const paginatedContacts = filteredContacts.slice(
-    (userPage - 1) * PER_PAGE,
-    userPage * PER_PAGE
-);
+        (userPage - 1) * PER_PAGE,
+        userPage * PER_PAGE
+    );
 
-const paginatedCategories = filteredCategories.slice(
-    (categoryPage - 1) * PER_PAGE,
-    categoryPage * PER_PAGE
-);
+    const paginatedCategories = filteredCategories.slice(
+        (categoryPage - 1) * PER_PAGE,
+        categoryPage * PER_PAGE
+    );
 
-const paginatedBanks = banks.slice(
-    (bankPage - 1) * PER_PAGE,
-    bankPage * PER_PAGE
-);
+    const paginatedBanks = banks.slice(
+        (bankPage - 1) * PER_PAGE,
+        bankPage * PER_PAGE
+    );
 
     // ─────────────────────────────────────────────────────────────
     // RENDER
@@ -411,11 +414,10 @@ const paginatedBanks = banks.slice(
                                 setShowCategoryForm(false);
                                 setShowBankForm(false);
                             }}
-                            className={`px-8 py-3 text-sm font-medium transition-colors border-b-2 ${
-                                activeTab === tab
+                            className={`px-8 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab
                                     ? "border-[#4A90D9] text-[#4A90D9] bg-blue-50"
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                            }`}
+                                }`}
                         >
                             {tab}
                         </button>
@@ -436,9 +438,9 @@ const paginatedBanks = banks.slice(
                                     placeholder="Search User"
                                     value={contactSearch}
                                     onChange={(e) => {
-    setContactSearch(e.target.value);
-    setUserPage(1);
-}}     />
+                                        setContactSearch(e.target.value);
+                                        setUserPage(1);
+                                    }} />
                             </div>
                             <div className="flex items-center gap-3">
                                 <BlueBtn onClick={() => { resetContactForm(); setShowContactForm(true); }}>
@@ -493,12 +495,12 @@ const paginatedBanks = banks.slice(
                                     </TableRow>
                                 ))}
                             </BlueTable>
-<Pagination
-    total={filteredContacts.length}
-    perPage={PER_PAGE}
-    page={userPage}
-    onPageChange={setUserPage}
-/>                        </div>
+                            <Pagination
+                                total={filteredContacts.length}
+                                perPage={PER_PAGE}
+                                page={userPage}
+                                onPageChange={setUserPage}
+                            />                        </div>
                     </div>
                 )}
 
@@ -514,10 +516,10 @@ const paginatedBanks = banks.slice(
                                     className="pl-9 pr-4 py-2 border border-gray-300 rounded text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#4A90D9]"
                                     placeholder="Search Category"
                                     value={categorySearch}
-onChange={(e) => {
-    setCategorySearch(e.target.value);
-    setCategoryPage(1);
-}}                                />
+                                    onChange={(e) => {
+                                        setCategorySearch(e.target.value);
+                                        setCategoryPage(1);
+                                    }} />
                             </div>
                             <div className="flex items-center gap-3">
                                 <BlueBtn onClick={() => { setEditingCategoryId(null); setCategoryName(""); setShowCategoryForm(true); }}>
@@ -558,12 +560,12 @@ onChange={(e) => {
                                     </TableRow>
                                 ))}
                             </BlueTable>
-<Pagination
-    total={filteredCategories.length}
-    perPage={PER_PAGE}
-    page={categoryPage}
-    onPageChange={setCategoryPage}
-/>                        </div>
+                            <Pagination
+                                total={filteredCategories.length}
+                                perPage={PER_PAGE}
+                                page={categoryPage}
+                                onPageChange={setCategoryPage}
+                            />                        </div>
                     </div>
                 )}
 
@@ -612,12 +614,12 @@ onChange={(e) => {
                                     </TableRow>
                                 ))}
                             </BlueTable>
-<Pagination
-    total={banks.length}
-    perPage={PER_PAGE}
-    page={bankPage}
-    onPageChange={setBankPage}
-/>                          </div>
+                            <Pagination
+                                total={banks.length}
+                                perPage={PER_PAGE}
+                                page={bankPage}
+                                onPageChange={setBankPage}
+                            />                          </div>
                     </div>
                 )}
             </div>
@@ -734,7 +736,8 @@ onChange={(e) => {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete <strong>{deleteDialog.name}</strong>. This action cannot be undone.
+                            <strong>{deleteDialog.name}</strong> will be deactivated and removed
+                            from the active users list. Existing expenses will be preserved.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

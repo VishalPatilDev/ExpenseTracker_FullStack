@@ -111,11 +111,10 @@ function SummaryCard({
                 {rows.map(([label, value], index) => (
                     <div
                         key={label}
-                        className={`flex items-center justify-between text-xs ${
-                            index === rows.length - 1
-                                ? "mt-1 border-t border-black/5 pt-2"
-                                : ""
-                        }`}
+                        className={`flex items-center justify-between text-xs ${index === rows.length - 1
+                            ? "mt-1 border-t border-black/5 pt-2"
+                            : ""
+                            }`}
                     >
                         <span
                             className={
@@ -285,10 +284,12 @@ function CategoryDonut({
     title,
     data,
     total,
+    chartType,
     emptyText = "No data available",
 }) {
     return (
         <div className="rounded-lg bg-white p-5">
+            {/* TITLE */}
             <div className="mb-5 flex justify-center">
                 <div className="rounded-full border border-blue-300 px-8 py-2">
                     <h3 className="text-sm font-bold text-blue-600">
@@ -297,13 +298,92 @@ function CategoryDonut({
                 </div>
             </div>
 
+            {/* EMPTY */}
             {!data.length ? (
                 <div className="flex h-64 items-center justify-center text-sm text-gray-400">
                     {emptyText}
                 </div>
-            ) : (
+            ) : chartType === "BAR" ? (
+                /* =================================================
+                   BAR CHART
+                   ================================================= */
                 <div className="relative h-[330px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                    >
+                        <BarChart
+                            data={data}
+                            layout="vertical"
+                            margin={{
+                                top: 10,
+                                right: 30,
+                                left: 20,
+                                bottom: 10,
+                            }}
+                        >
+                            <XAxis
+                                type="number"
+                                tickFormatter={fmtK}
+                                tick={{
+                                    fontSize: 10,
+                                }}
+                            />
+
+                            <YAxis
+                                type="category"
+                                dataKey="name"
+                                width={100}
+                                tick={{
+                                    fontSize: 10,
+                                }}
+                            />
+
+                            <Tooltip
+                                formatter={(value) =>
+                                    `₹${fmt(value)}`
+                                }
+                            />
+
+                            <Bar
+                                dataKey="value"
+                                name="Amount"
+                                radius={[
+                                    0,
+                                    5,
+                                    5,
+                                    0,
+                                ]}
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell
+                                        key={`${entry.name}-${index}`}
+                                        fill={entry.color}
+                                    />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                    {/* TOTAL */}
+                    <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-2">
+                        <span className="text-xs text-gray-400">
+                            Total:
+                        </span>
+
+                        <strong className="text-sm text-gray-700">
+                            ₹{fmt(total)}
+                        </strong>
+                    </div>
+                </div>
+            ) : (
+                /* =================================================
+                   PIE / DONUT CHART
+                   ================================================= */
+                <div className="relative h-[330px]">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                    >
                         <PieChart>
                             <Pie
                                 data={data}
@@ -335,6 +415,7 @@ function CategoryDonut({
                         </PieChart>
                     </ResponsiveContainer>
 
+                    {/* CENTER TOTAL */}
                     <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
                         <span className="text-xs text-gray-400">
                             Total
@@ -349,7 +430,6 @@ function CategoryDonut({
         </div>
     );
 }
-
 // ─────────────────────────────────────────────────────────────
 // DASHBOARD
 // ─────────────────────────────────────────────────────────────
@@ -630,7 +710,6 @@ export default function Dashboard() {
                 }
 
                 if (
-                    chartType &&
                     Number(chartMonth) >= 0 &&
                     date.getMonth() !== Number(chartMonth)
                 ) {
@@ -678,7 +757,6 @@ export default function Dashboard() {
                 }
 
                 if (
-                    chartType &&
                     Number(chartMonth) >= 0 &&
                     date.getMonth() !== Number(chartMonth)
                 ) {
@@ -691,7 +769,7 @@ export default function Dashboard() {
 
                 const status =
                     item.paymentStatus === "COMPLETE" ||
-                    item.paymentStatus === "PAID"
+                        item.paymentStatus === "PAID"
                         ? "Paid"
                         : "Pending";
 
@@ -877,10 +955,13 @@ export default function Dashboard() {
                                 radius={[2, 2, 0, 0]}
                             />
                         </BarChart>
+
                     </ResponsiveContainer>
+
 
                     <ChartLegend />
                 </div>
+
 
                 {/* MONTHLY LINE */}
                 <div className="rounded-lg border bg-white p-5 shadow-sm">
@@ -897,12 +978,12 @@ export default function Dashboard() {
                         <select
                             value={selectedYear}
                             onChange={(event) =>
-                                setSelectedYear(
-                                    event.target.value
-                                )
+                                setSelectedYear(event.target.value)
                             }
                             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs outline-none"
                         >
+                            <option value="All">All Years</option>
+
                             {availableYears.map((year) => (
                                 <option
                                     key={year}
@@ -911,8 +992,6 @@ export default function Dashboard() {
                                     {year}
                                 </option>
                             ))}
-
-                            <option value="All">All</option>
                         </select>
                     </div>
 
@@ -1015,11 +1094,10 @@ export default function Dashboard() {
                                 onClick={() =>
                                     setChartMode(mode)
                                 }
-                                className={`border-b-2 pb-2 text-sm font-medium transition ${
-                                    chartMode === mode
-                                        ? "border-blue-500 text-blue-600"
-                                        : "border-transparent text-gray-500 hover:text-gray-700"
-                                }`}
+                                className={`border-b-2 pb-2 text-sm font-medium transition ${chartMode === mode
+                                    ? "border-blue-500 text-blue-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                                    }`}
                             >
                                 {mode}
                             </button>
@@ -1030,12 +1108,12 @@ export default function Dashboard() {
                         <select
                             value={chartMonth}
                             onChange={(event) =>
-                                setChartMonth(
-                                    event.target.value
-                                )
+                                setChartMonth(event.target.value)
                             }
                             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs outline-none"
                         >
+                            <option value="-1">All Months</option>
+
                             {MONTHS.map((month, index) => (
                                 <option
                                     key={month}
@@ -1049,12 +1127,12 @@ export default function Dashboard() {
                         <select
                             value={selectedYear}
                             onChange={(event) =>
-                                setSelectedYear(
-                                    event.target.value
-                                )
+                                setSelectedYear(event.target.value)
                             }
                             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs outline-none"
                         >
+                            <option value="All">All Years</option>
+
                             {availableYears.map((year) => (
                                 <option
                                     key={year}
@@ -1069,11 +1147,10 @@ export default function Dashboard() {
                             onClick={() =>
                                 setChartType("PIE")
                             }
-                            className={`rounded px-3 py-2 text-xs font-semibold ${
-                                chartType === "PIE"
-                                    ? "bg-gray-200 text-gray-700"
-                                    : "border text-gray-500"
-                            }`}
+                            className={`rounded px-3 py-2 text-xs font-semibold ${chartType === "PIE"
+                                ? "bg-gray-200 text-gray-700"
+                                : "border text-gray-500"
+                                }`}
                         >
                             PIE
                         </button>
@@ -1082,11 +1159,10 @@ export default function Dashboard() {
                             onClick={() =>
                                 setChartType("BAR")
                             }
-                            className={`rounded px-3 py-2 text-xs font-semibold ${
-                                chartType === "BAR"
-                                    ? "bg-gray-200 text-gray-700"
-                                    : "border text-gray-500"
-                            }`}
+                            className={`rounded px-3 py-2 text-xs font-semibold ${chartType === "BAR"
+                                ? "bg-gray-200 text-gray-700"
+                                : "border text-gray-500"
+                                }`}
                         >
                             BAR
                         </button>
@@ -1096,18 +1172,18 @@ export default function Dashboard() {
 
             {/* CATEGORY CHARTS */}
             <div
-                className={`mt-0 grid gap-4 ${
-                    chartMode === "Income Only" ||
+                className={`mt-0 grid gap-4 ${chartMode === "Income Only" ||
                     chartMode === "Expense Only"
-                        ? "grid-cols-1"
-                        : "lg:grid-cols-2"
-                }`}
+                    ? "grid-cols-1"
+                    : "lg:grid-cols-2"
+                    }`}
             >
                 {chartMode !== "Expense Only" && (
                     <CategoryDonut
                         title="Income by Category"
                         data={incomeByCategory}
                         total={incomeCategoryTotal}
+                        chartType={chartType}
                         emptyText="No income data available"
                     />
                 )}
@@ -1117,6 +1193,7 @@ export default function Dashboard() {
                         title="Expense by Category"
                         data={expenseByCategory}
                         total={expenseCategoryTotal}
+                        chartType={chartType}
                         emptyText="No expense data available"
                     />
                 )}

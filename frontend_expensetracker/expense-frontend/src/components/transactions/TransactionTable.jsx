@@ -110,17 +110,16 @@ const InstallmentCell = ({ installments = [], onPay }) => {
 // TABLE HEADERS
 // ─────────────────────────────────────────────────────────────
 
-const HEADERS = [
-    "✓", "Index", "Date", "User", "Category", "Particular",
+const HEADERS = [ "Index", "Date", "User", "Category", "Particular",
     "Amount", "GST Amt", "TDS Amount", "Total (+GST)",
-    "Paid", "Pending", "Bill Type", "Status", "Branch",
+    "Paid", "Pending", "Bill Type", "Status", "Branch", "Action"
 ];
 
 // ─────────────────────────────────────────────────────────────
 // MAIN TABLE
 // ─────────────────────────────────────────────────────────────
 
-export default function TransactionTable({ expenses, onPayInstallment, onViewInstallments, }) {
+export default function TransactionTable({ expenses, onPayInstallment, onViewInstallments,onEdit, }) {
     const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
@@ -151,10 +150,7 @@ export default function TransactionTable({ expenses, onPayInstallment, onViewIns
                             key={exp.id}
                             className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors"
                         >
-                            {/* Checkmark */}
-                            <td className="px-3 py-3 text-center border-r border-gray-100">
-                                <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
-                            </td>
+                            
 
                             {/* Index */}
                             <td className="px-3 py-3 text-center text-gray-500 border-r border-gray-100">
@@ -235,6 +231,22 @@ export default function TransactionTable({ expenses, onPayInstallment, onViewIns
                                     {exp.branchName || "Pune Bro..."}
                                 </span>
                             </td>
+                            {/* Action */}
+<td className="px-3 py-3 text-center whitespace-nowrap">
+    <button
+        type="button"
+        onClick={() => onEdit?.(exp)}
+        className="inline-flex items-center gap-1 px-2.5 py-1
+                   rounded border border-blue-200
+                   bg-blue-50 text-[#4A90D9]
+                   text-xs font-semibold
+                   hover:bg-blue-100
+                   transition-colors"
+    >
+        Edit
+    </button>
+</td>
+
                         </tr>
                     ))}
                 </tbody>
