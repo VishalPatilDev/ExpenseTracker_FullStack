@@ -109,4 +109,14 @@ public class ExpenseController {
         User loggedInUser = (User) authentication.getPrincipal();
         return ResponseEntity.ok(expenseService.updateExpense(id, req, loggedInUser));
     }
+
+    @DeleteMapping("/{expenseId}")
+    public ResponseEntity<String> deleteExpense(
+            @PathVariable Long expenseId,
+            @AuthenticationPrincipal User loggedInUser) {
+
+        return ResponseEntity.ok(
+                expenseService.deleteExpense(expenseId, loggedInUser)
+        );
+    }
 }

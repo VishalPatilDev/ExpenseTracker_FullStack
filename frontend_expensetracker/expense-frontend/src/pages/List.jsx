@@ -90,6 +90,51 @@ export default function List() {
     const handleEditExpense = (expense) => {
         navigate(`/expense/edit/${expense.id}`);
     };
+    const handleDeleteExpense = async (expense) => {
+    if (!expense?.id) return;
+
+    const confirmed = window.confirm(
+        `Are you sure you want to delete this expense?\n\n` +
+        `Contact: ${expense.contact?.name || "—"}\n` +
+        `Amount: ₹${fmt(expense.total)}\n\n` +
+        `This will permanently delete the expense and its installment/payment records.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+        setLoading(true);
+
+        await api.delete(`/pjsofttech/expense/${expense.id}`);
+
+        alert("Expense deleted successfully.");
+
+        // Refresh list
+        await fetchData();
+
+        // Prevent being left on an empty page after deletion
+        setCurrentPage((current) => {
+            const remainingItems = filteredExpenses.length - 1;
+            const newTotalPages = Math.max(
+                1,
+                Math.ceil(remainingItems / itemsPerPage)
+            );
+
+            return Math.min(current, newTotalPages);
+        });
+
+    } catch (err) {
+        console.error("Delete expense error:", err);
+
+        alert(
+            err.response?.data?.error ||
+            err.response?.data?.message ||
+            "Failed to delete expense."
+        );
+    } finally {
+        setLoading(false);
+    }
+};
 
 
 
@@ -444,6 +489,8 @@ export default function List() {
                         onPayInstallment={openPaymentModal}
                         onViewInstallments={openInstallmentDialog}
                         onEdit={handleEditExpense}
+                            onDelete={handleDeleteExpense}
+
                     />
                     {/* Pagination */}
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 text-sm text-gray-500">

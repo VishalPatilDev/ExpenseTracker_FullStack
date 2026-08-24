@@ -110,7 +110,7 @@ const InstallmentCell = ({ installments = [], onPay }) => {
 // TABLE HEADERS
 // ─────────────────────────────────────────────────────────────
 
-const HEADERS = [ "Index", "Date", "User", "Category", "Particular",
+const HEADERS = ["Index", "Date", "User", "Category", "Particular",
     "Amount", "GST Amt", "TDS Amount", "Total (+GST)",
     "Paid", "Pending", "Bill Type", "Status", "Branch", "Action"
 ];
@@ -119,7 +119,7 @@ const HEADERS = [ "Index", "Date", "User", "Category", "Particular",
 // MAIN TABLE
 // ─────────────────────────────────────────────────────────────
 
-export default function TransactionTable({ expenses, onPayInstallment, onViewInstallments,onEdit, }) {
+export default function TransactionTable({ expenses, onPayInstallment, onViewInstallments, onEdit, onDelete, }) {
     const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
@@ -150,7 +150,7 @@ export default function TransactionTable({ expenses, onPayInstallment, onViewIns
                             key={exp.id}
                             className="border-b border-gray-100 hover:bg-blue-50/40 transition-colors"
                         >
-                            
+
 
                             {/* Index */}
                             <td className="px-3 py-3 text-center text-gray-500 border-r border-gray-100">
@@ -232,20 +232,34 @@ export default function TransactionTable({ expenses, onPayInstallment, onViewIns
                                 </span>
                             </td>
                             {/* Action */}
-<td className="px-3 py-3 text-center whitespace-nowrap">
-    <button
-        type="button"
-        onClick={() => onEdit?.(exp)}
-        className="inline-flex items-center gap-1 px-2.5 py-1
+                            <td className="px-3 py-3 flex gap-2 text-center whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    onClick={() => onEdit?.(exp)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1
                    rounded border border-blue-200
                    bg-blue-50 text-[#4A90D9]
                    text-xs font-semibold
                    hover:bg-blue-100
                    transition-colors"
-    >
-        Edit
-    </button>
-</td>
+                                >
+                                    Edit
+                                </button>
+                                {/* Delete */}
+                                <button
+                                    type="button"
+                                    onClick={() => onDelete?.(exp)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1
+                       rounded border border-red-200
+                       bg-red-50 text-red-600
+                       text-xs font-semibold
+                       hover:bg-red-100
+                       transition-colors"
+                                >
+                                    Delete
+                                </button>
+                                
+                            </td>
 
                         </tr>
                     ))}
