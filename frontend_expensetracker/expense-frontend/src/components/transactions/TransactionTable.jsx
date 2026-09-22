@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
@@ -258,7 +258,7 @@ export default function TransactionTable({ expenses, onPayInstallment, onViewIns
                                 >
                                     Delete
                                 </button>
-                                
+
                             </td>
 
                         </tr>

@@ -1,773 +1,502 @@
-import React, { useEffect, useState } from "react";
-import api from "../api/api";
-import { FaTrash, FaPencil } from "react-icons/fa6";
-import { Search } from "lucide-react";
-
+import { useState, useEffect } from "react";
+import { useSettings } from "@/context/SettingsContext";
+import { useToastContext } from "@/context/ToastContext";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    createContact, updateContact, deleteContact,
+    createCategory, deleteCategory,
+    createBank, deleteBank,createAssetCategory,deleteAssetCategory
+} from "@/api/settingsApi";
+import { useAsync } from "@/hooks/useAsync";
+import Button from "@/components/ui/Button";
+import FormField, { inputCls } from "@/components/ui/FormField";
+import Modal from "@/components/ui/Modal";
+import { Trash2, Pencil, Plus } from "lucide-react";
+import { formatINR } from "@/utils/formatters";
 
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+const TABS = ["Contacts", "Categories", "Banks", "Asset Categories",
+];
 
-// ─────────────────────────────────────────────────────────────
-// Shared UI primitives
-// ─────────────────────────────────────────────────────────────
+// ── Contacts tab ──────────────────────────────────────────────────────────────
+function ContactsTab() {
+    const { contacts, refresh } = useSettings();
+    const toast = useToastContext();
+    const [modal, setModal] = useState(null); // null | { mode: 'add'|'edit', data? }
+    const [form, setForm] = useState({ name: "", email: "", phoneNumber: "" });
 
-const BlueTable = ({ headers, children, emptyColSpan, emptyText, isEmpty }) => (
-    <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-        <table className="w-full text-sm">
-            <thead>
-                <tr className="bg-[#4A90D9] text-white">
-                    {headers.map((h) => (
-                        <th
-                            key={h.label}
-                            className={`px-4 py-3 font-semibold text-center border-r border-[#3a7fc1] last:border-r-0 ${h.className ?? ""}`}
-                        >
-                            {h.label}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {isEmpty ? (
-                    <tr>
-                        <td
-                            colSpan={emptyColSpan}
-                            className="py-12 text-center text-gray-400 text-sm"
-                        >
-                            {emptyText}
-                        </td>
-                    </tr>
-                ) : (
-                    children
-                )}
-            </tbody>
-        </table>
-    </div>
-);
-
-const TableRow = ({ children, onClick, className = "" }) => (
-    <tr
-        onClick={onClick}
-        className={`border-b border-gray-100 hover:bg-blue-50 transition-colors ${onClick ? "cursor-pointer" : ""} ${className}`}
-    >
-        {children}
-    </tr>
-);
-
-const Td = ({ children, center = false, className = "" }) => (
-    <td className={`px-4 py-3 border-r border-gray-100 last:border-r-0 ${center ? "text-center" : ""} ${className}`}>
-        {children}
-    </td>
-);
-
-const ActionBtn = ({ onClick, icon: Icon, danger }) => (
-    <button
-        onClick={onClick}
-        className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${danger
-            ? "text-red-500 hover:bg-red-50"
-            : "text-blue-500 hover:bg-blue-50"
-            }`}
-    >
-        <Icon className="w-3.5 h-3.5" />
-    </button>
-);
-
-const FormField = ({ label, children }) => (
-    <div className="space-y-1.5">
-        <label className="text-sm font-medium text-gray-700">{label}</label>
-        {children}
-    </div>
-);
-
-const StyledInput = ({ ...props }) => (
-    <input
-        {...props}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A90D9] focus:border-transparent"
-    />
-);
-
-const BlueBtn = ({ children, onClick, type = "button", disabled, className = "" }) => (
-    <button
-        type={type}
-        onClick={onClick}
-        disabled={disabled}
-        className={`bg-[#4A90D9] hover:bg-[#3a7fc1] disabled:opacity-60 text-white text-sm font-semibold px-5 py-2 rounded transition-colors ${className}`}
-    >
-        {children}
-    </button>
-);
-
-const OutlineBtn = ({ children, onClick, type = "button" }) => (
-    <button
-        type={type}
-        onClick={onClick}
-        className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-5 py-2 rounded transition-colors"
-    >
-        {children}
-    </button>
-);
-
-const CountBadge = ({ count, label }) => (
-    <span className="inline-flex items-center gap-1 border border-[#4A90D9] text-[#4A90D9] text-xs font-semibold px-3 py-1.5 rounded-full">
-        Total {label}: {count}
-    </span>
-);
-
-const Pagination = ({
-    total,
-    perPage = 25,
-    page = 1,
-    onPageChange,
-}) => {
-    const totalPages = Math.max(1, Math.ceil(total / perPage));
-
-    const start = total === 0 ? 0 : (page - 1) * perPage + 1;
-    const end = Math.min(page * perPage, total);
-
-    return (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
-            <span>
-                {start}–{end} of {total} {total === 1 ? "item" : "items"}
-            </span>
-
-            <div className="flex items-center gap-1">
-                <button
-                    type="button"
-                    onClick={() => onPageChange(page - 1)}
-                    disabled={page <= 1}
-                    className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    ‹
-                </button>
-
-                <span className="min-w-7 h-7 px-2 rounded bg-[#4A90D9] text-white text-xs font-semibold flex items-center justify-center">
-                    {page}
-                </span>
-
-                <button
-                    type="button"
-                    onClick={() => onPageChange(page + 1)}
-                    disabled={page >= totalPages}
-                    className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    ›
-                </button>
-
-                <span className="ml-2 text-xs text-gray-400">
-                    {perPage} / page
-                </span>
-            </div>
-        </div>
+    const { execute: save, loading: saving } = useAsync(
+        modal?.mode === "edit"
+            ? (data) => updateContact(modal.data.id, data)
+            : createContact
     );
-};
-// ─────────────────────────────────────────────────────────────
-// Tabs
-// ─────────────────────────────────────────────────────────────
+    const { execute: remove } = useAsync(deleteContact);
 
-const TABS = ["Users", "Categories", "Banks"];
-
-// ─────────────────────────────────────────────────────────────
-// Initial states
-// ─────────────────────────────────────────────────────────────
-
-const emptyContact = { name: "", phoneNumber: "", email: "" };
-const emptyBank = { name: "", branch: "", accountNumber: "", ifsc: "", accountType: "" };
-
-// ─────────────────────────────────────────────────────────────
-// COMPONENT
-// ─────────────────────────────────────────────────────────────
-
-export default function Settings() {
-    const [activeTab, setActiveTab] = useState("Users");
-
-    const [contacts, setContacts] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [banks, setBanks] = useState([]);
-    const [loading, setLoading] = useState(false);
-
-    const [contactSearch, setContactSearch] = useState("");
-    const [categorySearch, setCategorySearch] = useState("");
-
-    // Contact form
-    const [contact, setContact] = useState(emptyContact);
-    const [showContactForm, setShowContactForm] = useState(false);
-    const [editingContactId, setEditingContactId] = useState(null);
-
-    // Category form
-    const [categoryName, setCategoryName] = useState("");
-    const [showCategoryForm, setShowCategoryForm] = useState(false);
-    const [editingCategoryId, setEditingCategoryId] = useState(null);
-
-    // Bank form
-    const [bank, setBank] = useState(emptyBank);
-    const [showBankForm, setShowBankForm] = useState(false);
-
-    // Delete dialog
-    const [deleteDialog, setDeleteDialog] = useState({ open: false, type: null, id: null, name: "" });
-
-
-    const PER_PAGE = 10;
-
-    const [userPage, setUserPage] = useState(1);
-    const [categoryPage, setCategoryPage] = useState(1);
-    const [bankPage, setBankPage] = useState(1);
-    // ── Fetch ──────────────────────────────────────────────────
-    useEffect(() => {
-        fetchContacts();
-        fetchCategories();
-        fetchBanks();
-    }, []);
-
-
-    const fetchContacts = async () => {
-        try {
-            const res = await api.get("/pjsofttech/user/users");
-            setContacts(res.data || []);
-        } catch (e) { console.error(e); }
+    const openAdd = () => {
+        setForm({ name: "", email: "", phoneNumber: "" });
+        setModal({ mode: "add" });
+    };
+    const openEdit = (c) => {
+        setForm({ name: c.name, email: c.email, phoneNumber: c.phoneNumber });
+        setModal({ mode: "edit", data: c });
     };
 
-    const fetchCategories = async () => {
-        try {
-            const res = await api.get("/pjsofttech/category");
-            setCategories(res.data || []);
-        } catch (e) { console.error(e); }
-    };
-
-    const fetchBanks = async () => {
-        try {
-            const res = await api.get("/pjsofttech/bank");
-            setBanks(res.data || []);
-        } catch (e) { console.error(e); }
-    };
-
-    // ── Contact CRUD ───────────────────────────────────────────
-    const handleEditContact = (item) => {
-        setEditingContactId(item.id);
-        setContact({ name: item.name || "", phoneNumber: item.phoneNumber || "", email: item.email || "" });
-        setShowContactForm(true);
-    };
-
-    const handleContactSubmit = async (e) => {
+    const submit = async (e) => {
         e.preventDefault();
         try {
-            setLoading(true);
-            if (editingContactId) {
-                const res = await api.put(`/pjsofttech/user/${editingContactId}`, contact);
-                setContacts((prev) => prev.map((c) => c.id === res.data.id ? res.data : c));
-                alert("Contact updated successfully");
-            } else {
-                const res = await api.post("/pjsofttech/user", contact);
-                setContacts((prev) => [...prev, res.data]);
-                alert("Contact added successfully");
-            }
-            resetContactForm();
+            await save(form);
+            toast.success(modal.mode === "edit" ? "Contact updated" : "Contact added");
+            refresh();
+            setModal(null);
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to save contact");
-        } finally { setLoading(false); }
-    };
-
-    const resetContactForm = () => {
-        setContact(emptyContact);
-        setEditingContactId(null);
-        setShowContactForm(false);
-    };
-
-    // ── Category CRUD ──────────────────────────────────────────
-    const addCategory = async (e) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-            if (editingCategoryId) {
-                const res = await api.put(`/pjsofttech/category/${editingCategoryId}`, { name: categoryName });
-                setCategories((prev) => prev.map((c) => c.id === res.data.id ? res.data : c));
-                alert("Category updated successfully");
-            } else {
-                const res = await api.post("/pjsofttech/category", { name: categoryName });
-                setCategories((prev) => [...prev, res.data]);
-                alert("Category added successfully");
-            }
-            setCategoryName(""); setEditingCategoryId(null); setShowCategoryForm(false);
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to save category");
-        } finally { setLoading(false); }
-    };
-
-    const handleEditCategory = (item) => {
-        setEditingCategoryId(item.id);
-        setCategoryName(item.name || "");
-        setShowCategoryForm(true);
-    };
-
-    // ── Bank CRUD ──────────────────────────────────────────────
-    const addBank = async (e) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-            const res = await api.post("/pjsofttech/bank", bank);
-            setBanks((prev) => [...prev, res.data]);
-            alert("Bank added successfully");
-            setBank(emptyBank); setShowBankForm(false);
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to add bank");
-        } finally { setLoading(false); }
-    };
-
-    // ── Delete ─────────────────────────────────────────────────
-    const openDeleteDialog = (type, id, name) =>
-        setDeleteDialog({ open: true, type, id, name });
-
-    const closeDeleteDialog = () =>
-        setDeleteDialog({ open: false, type: null, id: null, name: "" });
-
-    const confirmDelete = async () => {
-        const { type, id } = deleteDialog;
-        if (!id) {
-            alert("Invalid contact ID");
-            return;
+            toast.error(err?.response?.data?.message || "Failed");
         }
-        try {
-            setLoading(true);
-            if (type === "contact") {
-                await api.delete(`/pjsofttech/user/${id}`);
-                setContacts((prev) => prev.filter((c) => c.id !== id));
-                setUserPage(1);
-
-                if (editingContactId === id) resetContactForm();
-
-                alert("Contact deleted successfully");
-            }
-
-            if (type === "category") {
-                await api.delete(`/pjsofttech/category/${id}`);
-                setCategories((prev) => prev.filter((c) => c.id !== id));
-                setCategoryPage(1);
-
-                alert("Category deleted successfully");
-            }
-
-            if (type === "bank") {
-                await api.delete(`/pjsofttech/bank/${id}`);
-                setBanks((prev) => prev.filter((b) => b.id !== id));
-                setBankPage(1);
-
-                alert("Bank deleted successfully");
-            }
-            closeDeleteDialog();
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to delete");
-        } finally { setLoading(false); }
     };
 
-    // ── Filtered lists ─────────────────────────────────────────
-    const filteredContacts = contacts.filter((c) =>
-        c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
-        c.email?.toLowerCase().includes(contactSearch.toLowerCase())
-    );
-
-    const filteredCategories = categories.filter((c) =>
-        c.name?.toLowerCase().includes(categorySearch.toLowerCase())
-    );
-    const paginatedContacts = filteredContacts.slice(
-        (userPage - 1) * PER_PAGE,
-        userPage * PER_PAGE
-    );
-
-    const paginatedCategories = filteredCategories.slice(
-        (categoryPage - 1) * PER_PAGE,
-        categoryPage * PER_PAGE
-    );
-
-    const paginatedBanks = banks.slice(
-        (bankPage - 1) * PER_PAGE,
-        bankPage * PER_PAGE
-    );
-
-    // ─────────────────────────────────────────────────────────────
-    // RENDER
-    // ─────────────────────────────────────────────────────────────
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete this contact?")) return;
+        try {
+            await remove(id);
+            toast.success("Contact deleted");
+            refresh();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed to delete");
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto space-y-5">
-
-                {/* ── Inner tab bar ── */}
-                <div className="flex border-b border-gray-200 bg-white rounded-t-lg shadow-sm overflow-hidden">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => {
-                                setActiveTab(tab);
-                                setShowContactForm(false);
-                                setShowCategoryForm(false);
-                                setShowBankForm(false);
-                            }}
-                            className={`px-8 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === tab
-                                ? "border-[#4A90D9] text-[#4A90D9] bg-blue-50"
-                                : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-
-                {/* ════════════════════════════════════════ */}
-                {/* USERS TAB                               */}
-                {/* ════════════════════════════════════════ */}
-                {activeTab === "Users" && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                            {/* Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    className="pl-9 pr-4 py-2 border border-gray-300 rounded text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#4A90D9]"
-                                    placeholder="Search User"
-                                    value={contactSearch}
-                                    onChange={(e) => {
-                                        setContactSearch(e.target.value);
-                                        setUserPage(1);
-                                    }} />
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <BlueBtn onClick={() => { resetContactForm(); setShowContactForm(true); }}>
-                                    ADD USER
-                                </BlueBtn>
-                                <CountBadge count={contacts.length} label="Users" />
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                            <BlueTable
-                                headers={[
-                                    { label: "Id", className: "w-16" },
-                                    { label: "Username" },
-                                    { label: "Phone Number" },
-                                    { label: "Email" },
-                                    { label: "Actions", className: "w-24" },
-                                ]}
-                                isEmpty={filteredContacts.length === 0}
-                                emptyColSpan={5}
-                                emptyText="No users found."
-                            >
-                                {paginatedContacts.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <Td center className="text-gray-500 text-xs">{item.id}</Td>
-                                        <Td>
-                                            <a
-                                                className="text-[#4A90D9] hover:underline font-medium cursor-pointer"
-                                                onClick={() => handleEditContact(item)}
-                                            >
-                                                {item.name}
-                                            </a>
-                                        </Td>
-                                        <Td center>{item.phoneNumber}</Td>
-                                        <Td>{item.email}</Td>
-                                        <Td center>
-                                            <div className="flex items-center justify-center gap-2">
-                                                <ActionBtn
-                                                    icon={FaPencil}
-                                                    onClick={() => handleEditContact(item)}
-                                                />
-                                                <ActionBtn
-                                                    icon={FaTrash}
-                                                    danger
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openDeleteDialog("contact", item.id, item.name);
-                                                    }}
-                                                />
-                                            </div>
-                                        </Td>
-                                    </TableRow>
-                                ))}
-                            </BlueTable>
-                            <Pagination
-                                total={filteredContacts.length}
-                                perPage={PER_PAGE}
-                                page={userPage}
-                                onPageChange={setUserPage}
-                            />                        </div>
-                    </div>
-                )}
-
-                {/* ════════════════════════════════════════ */}
-                {/* CATEGORIES TAB                          */}
-                {/* ════════════════════════════════════════ */}
-                {activeTab === "Categories" && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <input
-                                    className="pl-9 pr-4 py-2 border border-gray-300 rounded text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#4A90D9]"
-                                    placeholder="Search Category"
-                                    value={categorySearch}
-                                    onChange={(e) => {
-                                        setCategorySearch(e.target.value);
-                                        setCategoryPage(1);
-                                    }} />
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <BlueBtn onClick={() => { setEditingCategoryId(null); setCategoryName(""); setShowCategoryForm(true); }}>
-                                    ADD CATEGORY
-                                </BlueBtn>
-                                <CountBadge count={categories.length} label="Categories" />
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                            <BlueTable
-                                headers={[
-                                    { label: "ID", className: "w-16" },
-                                    { label: "Name" },
-                                    { label: "Actions", className: "w-24" },
-                                ]}
-                                isEmpty={filteredCategories.length === 0}
-                                emptyColSpan={3}
-                                emptyText="No categories found."
-                            >
-                                {paginatedCategories.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <Td center className="text-gray-500 text-xs">{item.id}</Td>
-                                        <Td center className="font-medium">{item.name}</Td>
-                                        <Td center>
-                                            <div className="flex items-center justify-center gap-2">
-                                                <ActionBtn
-                                                    icon={FaPencil}
-                                                    onClick={() => handleEditCategory(item)}
-                                                />
-                                                <ActionBtn
-                                                    icon={FaTrash}
-                                                    danger
-                                                    onClick={() => openDeleteDialog("category", item.id, item.name)}
-                                                />
-                                            </div>
-                                        </Td>
-                                    </TableRow>
-                                ))}
-                            </BlueTable>
-                            <Pagination
-                                total={filteredCategories.length}
-                                perPage={PER_PAGE}
-                                page={categoryPage}
-                                onPageChange={setCategoryPage}
-                            />                        </div>
-                    </div>
-                )}
-
-                {/* ════════════════════════════════════════ */}
-                {/* BANKS TAB                               */}
-                {/* ════════════════════════════════════════ */}
-                {activeTab === "Banks" && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <h2 className="text-base font-semibold text-gray-700">Bank Accounts</h2>
-                            <BlueBtn onClick={() => { setBank(emptyBank); setShowBankForm(true); }}>
-                                ADD BANK
-                            </BlueBtn>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                            <BlueTable
-                                headers={[
-                                    { label: "ID", className: "w-16" },
-                                    { label: "Bank Name" },
-                                    { label: "Branch" },
-                                    { label: "Account Number" },
-                                    { label: "IFSC" },
-                                    { label: "Account Type" },
-                                    { label: "Actions", className: "w-24" },
-                                ]}
-                                isEmpty={banks.length === 0}
-                                emptyColSpan={7}
-                                emptyText="No banks found."
-                            >
-                                {paginatedBanks.map((item) => (
-                                    <TableRow key={item.id}>
-                                        <Td center className="text-gray-500 text-xs">{item.id}</Td>
-                                        <Td className="font-medium">{item.name}</Td>
-                                        <Td>{item.branch}</Td>
-                                        <Td center>{item.accountNumber}</Td>
-                                        <Td center>{item.ifsc}</Td>
-                                        <Td center>{item.accountType}</Td>
-                                        <Td center>
-                                            <ActionBtn
-                                                icon={FaTrash}
-                                                danger
-                                                onClick={() => openDeleteDialog("bank", item.id, item.name)}
-                                            />
-                                        </Td>
-                                    </TableRow>
-                                ))}
-                            </BlueTable>
-                            <Pagination
-                                total={banks.length}
-                                perPage={PER_PAGE}
-                                page={bankPage}
-                                onPageChange={setBankPage}
-                            />                          </div>
-                    </div>
-                )}
+        <>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-slate-400">{contacts.length} contacts</p>
+                <Button size="sm" onClick={openAdd}><Plus size={14} /> Add contact</Button>
             </div>
 
-            {/* ── Contact Form Dialog ── */}
-            <Dialog open={showContactForm} onOpenChange={(v) => { if (!v) resetContactForm(); }}>
-                <DialogContent className="max-w-sm bg-white shadow">
-                    <DialogHeader>
-                        <DialogTitle className="text-[#4A90D9]">
-                            {editingContactId ? "Edit User" : "Add User"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleContactSubmit} className="space-y-4 pt-2">
-                        <FormField label="Name">
-                            <StyledInput
-                                value={contact.name}
-                                onChange={(e) => setContact({ ...contact, name: e.target.value })}
-                                placeholder="Enter name"
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Phone Number">
-                            <StyledInput
-                                value={contact.phoneNumber}
-                                onChange={(e) => setContact({ ...contact, phoneNumber: e.target.value })}
-                                placeholder="Enter phone number"
-                                required
-                            />
-                        </FormField>
-                        <FormField label="Email">
-                            <StyledInput
-                                type="email"
-                                value={contact.email}
-                                onChange={(e) => setContact({ ...contact, email: e.target.value })}
-                                placeholder="Enter email"
-                                required
-                            />
-                        </FormField>
-                        <div className="flex justify-end gap-2 pt-1">
-                            <OutlineBtn onClick={resetContactForm}>Cancel</OutlineBtn>
-                            <BlueBtn type="submit" disabled={loading}>
-                                {loading ? "Saving..." : editingContactId ? "Update" : "Save"}
-                            </BlueBtn>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* ── Category Form Dialog ── */}
-            <Dialog open={showCategoryForm} onOpenChange={(v) => { if (!v) { setCategoryName(""); setEditingCategoryId(null); setShowCategoryForm(false); } }}>
-                <DialogContent className="max-w-sm bg-white shadow ">
-                    <DialogHeader>
-                        <DialogTitle className="text-[#4A90D9]">
-                            {editingCategoryId ? "Edit Category" : "Add Category"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={addCategory} className="space-y-4 pt-2">
-                        <FormField label="Category Name">
-                            <StyledInput
-                                value={categoryName}
-                                onChange={(e) => setCategoryName(e.target.value)}
-                                placeholder="e.g. Food"
-                                required
-                            />
-                        </FormField>
-                        <div className="flex justify-end gap-2 pt-1">
-                            <OutlineBtn onClick={() => { setCategoryName(""); setEditingCategoryId(null); setShowCategoryForm(false); }}>
-                                Cancel
-                            </OutlineBtn>
-                            <BlueBtn type="submit" disabled={loading}>
-                                {loading ? "Saving..." : "Save Category"}
-                            </BlueBtn>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* ── Bank Form Dialog ── */}
-            <Dialog open={showBankForm} onOpenChange={(v) => { if (!v) { setBank(emptyBank); setShowBankForm(false); } }}>
-                <DialogContent className="max-w-sm bg-white shadow">
-                    <DialogHeader>
-                        <DialogTitle className="text-[#4A90D9]">Add Bank</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={addBank} className="space-y-4 pt-2">
-                        {[
-                            { label: "Bank Name", key: "name", placeholder: "e.g. HDFC Bank" },
-                            { label: "Branch", key: "branch", placeholder: "Branch name" },
-                            { label: "Account Number", key: "accountNumber", placeholder: "Account number" },
-                            { label: "IFSC Code", key: "ifsc", placeholder: "e.g. HDFC0001234" },
-                        ].map(({ label, key, placeholder }) => (
-                            <FormField key={key} label={label}>
-                                <StyledInput
-                                    value={bank[key]}
-                                    onChange={(e) => setBank({ ...bank, [key]: key === "ifsc" ? e.target.value.toUpperCase() : e.target.value })}
-                                    placeholder={placeholder}
-                                    required
-                                />
-                            </FormField>
-
+            <div className="rounded-xl border border-slate-800 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-800/60">
+                        <tr>
+                            {["Name", "Email", "Phone", ""].map((h) => (
+                                <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-slate-400">{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {contacts.length === 0 ? (
+                            <tr><td colSpan={4} className="text-center py-10 text-slate-500">No contacts yet</td></tr>
+                        ) : contacts.map((c) => (
+                            <tr key={c.id} className="border-t border-slate-800 hover:bg-slate-800/30">
+                                <td className="px-4 py-2.5 text-slate-100">{c.name}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{c.email}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{c.phoneNumber}</td>
+                                <td className="px-4 py-2.5">
+                                    <div className="flex gap-2 justify-end">
+                                        <button onClick={() => openEdit(c)} className="p-1 text-slate-400 hover:text-indigo-400">
+                                            <Pencil size={13} />
+                                        </button>
+                                        <button onClick={() => handleDelete(c.id)} className="p-1 text-slate-400 hover:text-rose-400">
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         ))}
-                        <FormField label="Account Type">
-                            <select
-                                value={bank.accountType}
-                                onChange={(e) =>
-                                    setBank({
-                                        ...bank,
-                                        accountType: e.target.value,
-                                    })
-                                }
-                                required
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#4A90D9] focus:border-transparent"
-                            >
-                                <option value="">Select account type</option>
-                                <option value="SAVINGS">SAVINGS</option>
-                                <option value="CURRENT">CURRENT</option>
-                            </select>
-                        </FormField>
-                        <div className="flex justify-end gap-2 pt-1">
-                            <OutlineBtn onClick={() => { setBank(emptyBank); setShowBankForm(false); }}>Cancel</OutlineBtn>
-                            <BlueBtn type="submit" disabled={loading}>
-                                {loading ? "Saving..." : "Save Bank"}
-                            </BlueBtn>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                    </tbody>
+                </table>
+            </div>
 
-            {/* ── Delete Dialog ── */}
-            <AlertDialog open={deleteDialog.open} onOpenChange={(v) => { if (!v) closeDeleteDialog(); }}>
-                <AlertDialogContent className='hover:bg-white'>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            <strong>{deleteDialog.name}</strong> will be deactivated and removed
-                            from the active users list. Existing expenses will be preserved.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-red-500 hover:bg-red-600 text-white"
-                            onClick={confirmDelete}
-                        >
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <Modal
+                open={!!modal}
+                onClose={() => setModal(null)}
+                title={modal?.mode === "edit" ? "Edit contact" : "Add contact"}
+            >
+                <form onSubmit={submit} className="flex flex-col gap-4">
+                    {["name", "email", "phoneNumber"].map((field) => (
+                        <FormField key={field} label={field === "phoneNumber" ? "Phone" : field.charAt(0).toUpperCase() + field.slice(1)}>
+                            <input
+                                type={field === "email" ? "email" : "text"}
+                                required
+                                value={form[field]}
+                                onChange={(e) => setForm((p) => ({ ...p, [field]: e.target.value }))}
+                                className={inputCls}
+                            />
+                        </FormField>
+                    ))}
+                    <div className="flex gap-3 justify-end">
+                        <Button type="button" variant="ghost" onClick={() => setModal(null)}>Cancel</Button>
+                        <Button type="submit" loading={saving}>{modal?.mode === "edit" ? "Update" : "Add"}</Button>
+                    </div>
+                </form>
+            </Modal>
+        </>
+    );
+}
+
+// ── Categories tab ────────────────────────────────────────────────────────────
+function CategoriesTab() {
+    const { categories, refresh } = useSettings();
+    const toast = useToastContext();
+    const [showForm, setShowForm] = useState(false);
+    const [name, setName] = useState("");
+    const [transactionType, setTransactionType] = useState("EXPENSE");
+    const { execute: save, loading } = useAsync(createCategory);
+    const { execute: remove } = useAsync(deleteCategory);
+
+    const submit = async (e) => {
+        e.preventDefault();
+        try {
+            await save({ name, transactionType });
+            toast.success("Category added");
+            setName(""); setShowForm(false);
+            refresh();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed");
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete category?")) return;
+        try {
+            await remove(id);
+            toast.success("Category deleted");
+            refresh();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed");
+        }
+    };
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-slate-400">{categories.length} categories</p>
+                <Button size="sm" onClick={() => setShowForm((p) => !p)}>
+                    <Plus size={14} /> Add category
+                </Button>
+            </div>
+
+            {showForm && (
+                <form onSubmit={submit} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 flex gap-3 items-end mb-4">
+                    <FormField label="Name" className="flex-1">
+                        <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+                    </FormField>
+                    <FormField label="Type">
+                        <select value={transactionType} onChange={(e) => setTransactionType(e.target.value)} className={inputCls}>
+                            <option value="EXPENSE">Expense</option>
+                            <option value="INCOME">Income</option>
+                        </select>
+                    </FormField>
+                    <Button type="submit" loading={loading}>Save</Button>
+                    <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+                </form>
+            )}
+
+            <div className="rounded-xl border border-slate-800 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-800/60">
+                        <tr>
+                            {["Name", "Type", ""].map((h) => (
+                                <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-slate-400">{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {categories.length === 0 ? (
+                            <tr><td colSpan={3} className="text-center py-10 text-slate-500">No categories yet</td></tr>
+                        ) : categories.map((c) => (
+                            <tr key={c.id} className="border-t border-slate-800 hover:bg-slate-800/30">
+                                <td className="px-4 py-2.5 text-slate-100">{c.name}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{c.transactionType || "-"}</td>
+                                <td className="px-4 py-2.5 text-right">
+                                    <button onClick={() => handleDelete(c.id)} className="p-1 text-slate-400 hover:text-rose-400">
+                                        <Trash2 size={13} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+}
+
+// ── Banks tab ─────────────────────────────────────────────────────────────────
+function BanksTab() {
+    const { banks, refresh } = useSettings();
+    const toast = useToastContext();
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState({ name: "", accountNumber: "", branch: "", ifsc: "", accountType: "SAVINGS", openingBalance: "" });
+    const { execute: save, loading } = useAsync(createBank);
+    const { execute: remove } = useAsync(deleteBank);
+
+    const handle = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+    const submit = async (e) => {
+        e.preventDefault();
+        try {
+            await save({ ...form, openingBalance: Number(form.openingBalance) });
+            toast.success("Bank added");
+            setForm({ name: "", accountNumber: "", branch: "", ifsc: "", accountType: "SAVINGS", openingBalance: "" });
+            setShowForm(false);
+            refresh();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed");
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete bank?")) return;
+        try {
+            await remove(id);
+            toast.success("Bank deleted");
+            refresh();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Failed");
+        }
+    };
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-slate-400">{banks.length} banks</p>
+                <Button size="sm" onClick={() => setShowForm((p) => !p)}>
+                    <Plus size={14} /> Add bank
+                </Button>
+            </div>
+
+            {showForm && (
+                <form onSubmit={submit} className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 grid grid-cols-2 gap-4 mb-4">
+                    {[
+                        { name: "name", label: "Bank name", type: "text" },
+                        { name: "accountNumber", label: "Account number", type: "text" },
+                        { name: "branch", label: "Branch", type: "text" },
+                        { name: "ifsc", label: "IFSC", type: "text" },
+                    ].map(({ name, label, type }) => (
+                        <FormField key={name} label={label}>
+                            <input type={type} name={name} required value={form[name]} onChange={handle} className={inputCls} />
+                        </FormField>
+                    ))}
+                    <FormField label="Account type">
+                        <select name="accountType" value={form.accountType} onChange={handle} className={inputCls}>
+                            <option value="SAVINGS">Savings</option>
+                            <option value="CURRENT">Current</option>
+                        </select>
+                    </FormField>
+                    <FormField label="Opening balance (₹)">
+                        <input type="number" name="openingBalance" min="0" value={form.openingBalance} onChange={handle} className={inputCls} />
+                    </FormField>
+                    <div className="col-span-2 flex gap-3 justify-end">
+                        <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button>
+                        <Button type="submit" loading={loading}>Save</Button>
+                    </div>
+                </form>
+            )}
+
+            <div className="rounded-xl border border-slate-800 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-800/60">
+                        <tr>
+                            {["Name", "Account No.", "Branch", "IFSC", "Type", "Balance", ""].map((h) => (
+                                <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-slate-400">{h}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {banks.length === 0 ? (
+                            <tr><td colSpan={7} className="text-center py-10 text-slate-500">No banks yet</td></tr>
+                        ) : banks.map((b) => (
+                            <tr key={b.id} className="border-t border-slate-800 hover:bg-slate-800/30">
+                                <td className="px-4 py-2.5 text-slate-100">{b.name}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{b.accountNumber}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{b.branch}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{b.ifsc}</td>
+                                <td className="px-4 py-2.5 text-slate-400">{b.accountType}</td>
+                                <td className="px-4 py-2.5 font-medium text-emerald-400">₹{formatINR(b.currentBalance)}</td>
+                                <td className="px-4 py-2.5 text-right">
+                                    <button onClick={() => handleDelete(b.id)} className="p-1 text-slate-400 hover:text-rose-400">
+                                        <Trash2 size={13} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+}
+function AssetCategoriesTab() {
+    const { assetCategories, refresh } = useSettings();
+    const toast = useToastContext();
+
+    const [showForm, setShowForm] = useState(false);
+    const [name, setName] = useState("");
+
+    const { execute: save, loading } = useAsync(createAssetCategory);
+    const { execute: remove } = useAsync(deleteAssetCategory);
+
+    const submit = async (e) => {
+        e.preventDefault();
+
+        try {
+            await save({ name });
+
+            toast.success("Asset category added");
+
+            setName("");
+            setShowForm(false);
+            refresh();
+        } catch (err) {
+            toast.error(
+                err?.response?.data?.message || "Failed to add asset category"
+            );
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Delete asset category?")) return;
+
+        try {
+            await remove(id);
+
+            toast.success("Asset category deleted");
+            refresh();
+        } catch (err) {
+            toast.error(
+                err?.response?.data?.message || "Failed to delete asset category"
+            );
+        }
+    };
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-slate-400">
+                    {assetCategories.length} asset categories
+                </p>
+
+                <Button
+                    size="sm"
+                    onClick={() => setShowForm((p) => !p)}
+                >
+                    <Plus size={14} />
+                    Add asset category
+                </Button>
+            </div>
+
+            {showForm && (
+                <form
+                    onSubmit={submit}
+                    className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 flex gap-3 items-end mb-4"
+                >
+                    <FormField label="Name" className="flex-1">
+                        <input
+                            type="text"
+                            required
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className={inputCls}
+                            placeholder="e.g. Vehicle, Property, Gold"
+                        />
+                    </FormField>
+
+                    <Button type="submit" loading={loading}>
+                        Save
+                    </Button>
+
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                            setName("");
+                            setShowForm(false);
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                </form>
+            )}
+
+            <div className="rounded-xl border border-slate-800 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-800/60">
+                        <tr>
+                            {["Name", ""].map((h) => (
+                                <th
+                                    key={h}
+                                    className="px-4 py-2.5 text-left text-xs font-medium text-slate-400"
+                                >
+                                    {h}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {assetCategories.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={2}
+                                    className="text-center py-10 text-slate-500"
+                                >
+                                    No asset categories yet
+                                </td>
+                            </tr>
+                        ) : (
+                            assetCategories.map((category) => (
+                                <tr
+                                    key={category.id}
+                                    className="border-t border-slate-800 hover:bg-slate-800/30"
+                                >
+                                    <td className="px-4 py-2.5 text-slate-100">
+                                        {category.name}
+                                    </td>
+
+                                    <td className="px-4 py-2.5 text-right">
+                                        <button
+                                            onClick={() =>
+                                                handleDelete(category.id)
+                                            }
+                                            className="p-1 text-slate-400 hover:text-rose-400"
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+export default function Settings() {
+    const [tab, setTab] = useState("Contacts");
+
+    return (
+        <div className="max-w-3xl">
+            <h1 className="text-xl font-semibold text-white mb-6">Settings</h1>
+
+            <div className="flex gap-1 mb-6 border-b border-slate-800">
+                {TABS.map((t) => (
+                    <button
+                        key={t}
+                        onClick={() => setTab(t)}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t
+                            ? "border-indigo-500 text-white"
+                            : "border-transparent text-slate-400 hover:text-slate-200"
+                            }`}
+                    >
+                        {t}
+                    </button>
+                ))}
+            </div>
+
+            {tab === "Contacts" && <ContactsTab />}
+            {tab === "Categories" && <CategoriesTab />}
+            {tab === "Banks" && <BanksTab />}
+            {tab === "Asset Categories" && <AssetCategoriesTab />}
+
         </div>
     );
 }

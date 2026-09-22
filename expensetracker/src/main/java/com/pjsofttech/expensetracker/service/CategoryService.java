@@ -1,8 +1,10 @@
 package com.pjsofttech.expensetracker.service;
 
+import com.pjsofttech.expensetracker.custom_exceptions.DuplicateCategoryException;
 import com.pjsofttech.expensetracker.dto.CategoryRequestDto;
 import com.pjsofttech.expensetracker.dto.CategoryResponseDto;
 import com.pjsofttech.expensetracker.model.Category;
+import com.pjsofttech.expensetracker.model.TransactionType;
 import com.pjsofttech.expensetracker.model.User;
 import com.pjsofttech.expensetracker.repository.CategoryRepository;
 import jakarta.validation.Valid;
@@ -18,13 +20,20 @@ public class CategoryService {
 
     public CategoryResponseDto
     addCategory(CategoryRequestDto categoryRequestDto,User loggedInUser) {
+        TransactionType transactionType = TransactionType.valueOf(categoryRequestDto.getTransactionType().toString().toUpperCase());
        Category category = Category.builder()
                .name(categoryRequestDto.getName())
+               .transactionType(categoryRequestDto.getTransactionType())
                .owner(loggedInUser)
                .build();
+       if(categoryRepository.existsByIdAndOwner(category.getId(), loggedInUser)){
+           throw new DuplicateCategoryException("Category Already Exists!");
+       }
        categoryRepository.save(category);
        return CategoryResponseDto.builder()
+               .id(category.getId())
                .name(category.getName())
+               .transactionType(category.getTransactionType())
                .build();
     }
 
@@ -33,7 +42,9 @@ public class CategoryService {
                 .stream()
                 .map(c->CategoryResponseDto.builder()
                         .id(c.getId())
-                        .name(c.getName()).build())
+                        .name(c.getName())
+                        .transactionType(c.getTransactionType())
+                        .build())
                 .toList();
     }
 

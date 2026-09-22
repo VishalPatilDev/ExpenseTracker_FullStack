@@ -1,10 +1,10 @@
 package com.pjsofttech.expensetracker.security;
 
+import com.pjsofttech.expensetracker.config.OAuth2SuccessHandler;
 import com.pjsofttech.expensetracker.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -29,22 +29,34 @@ public class SecurityConfig {
     private UserDetailsServiceImpl userDetailsService;
     @Autowired
     private JWTFilterChain jwtFilterChain;
+    @Autowired
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         return http.csrf(c->c.disable())
 
-                .authorizeHttpRequests(a->a
-                        // CORS preflight requests
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .authorizeHttpRequests(a->
 
-                        // Public authentication endpoints
-                        .requestMatchers(
-                                "/pjsofttech_welcome/login",
-                                "/pjsofttech_welcome/register",
-                                "/pjsofttech_welcome/health"
+                        a.requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
                         ).permitAll()
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/oauth2/**").permitAll()
+                                .requestMatchers("/login/**").permitAll()
+
+
+
+                        .requestMatchers(
+
+                                "/pjsofttech_welcome/login","/pjsofttech_welcome/health",
+                                "/pjsofttech_welcome/register","/pjsofttech_welcome","/actuator/**").permitAll()
                         .anyRequest().authenticated())
+                .oauth2Login(oauth -> oauth
+                        .successHandler(oAuth2SuccessHandler)
+                )
                 .cors(Customizer.withDefaults())
                 .addFilterBefore(jwtFilterChain, UsernamePasswordAuthenticationFilter.class)
                 .build();

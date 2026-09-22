@@ -1,81 +1,56 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
-import axios from 'axios'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Dashboard from './pages/Dashboard'
-import Expense from './pages/Expense'
-import List from './pages/List'
-import Settings from './pages/Settings'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { SettingsProvider } from "@/context/SettingsContext";
+import { ToastProvider } from "@/context/ToastContext";
+import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import AppLayout from "@/components/layout/AppLayout";
 
-function App() {
-  const [count, setCount] = useState(0)
-  const [message, setMessage] = useState("")
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import AddExpense from "@/pages/AddExpense";
+import TransactionList from "@/pages/TransactionList";
+import Settings from "@/pages/Settings";
+import NetWorth from "@/pages/NetWorth";
+import Assets from "@/pages/Assets";
+import Liability from "./pages/Liability";
 
-  function ProtectedRoute({ children }) {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      return <Navigate to="/" replace></Navigate>
-    }
-    return children;
-  }
-
-
-
+function ProtectedLayout({ children }) {
   return (
-    <>
-      {/* <h1>React Frontend</h1>
-      <p>{message}</p> */}
-      {/* <Navbar></Navbar> */}
-      {/* localStorage.removeItem("token") */}
-
-
-
-      <Routes>
-        <Route path='/' element={<Login></Login>}></Route>
-        <Route path='/login' element={<Login></Login>}></Route>
-
-        <Route path='/register' element={<Register></Register>}></Route>
-        <Route path='/dashboard' element={
-          <ProtectedRoute>
-            <>
-              <Navbar />
-              <Dashboard />
-            </>
-          </ProtectedRoute>
-        }></Route>
-        <Route path='/expense' element={<ProtectedRoute>
-          <>
-            <Navbar />
-            <Expense />
-          </>
-        </ProtectedRoute>}></Route>
-        <Route path='list' element={<ProtectedRoute>
-          <>
-            <Navbar />
-            <List />
-          </>
-        </ProtectedRoute>}></Route>
-        <Route path='settings' element={<ProtectedRoute>
-          <>
-            <Navbar />
-            <Settings />
-          </>
-        </ProtectedRoute>}></Route>
-        <Route path='/expense/edit/:id' element={<ProtectedRoute>
-          <>
-            <Navbar />
-            <Expense />
-          </>
-        </ProtectedRoute>}></Route>
-      </Routes>
-    </>
-  )
+    <ProtectedRoute>
+      <AppLayout>{children}</AppLayout>
+    </ProtectedRoute>
+  );
 }
 
-export default App
+export default function App() {
+  return (
+    <AuthProvider>
+      <SettingsProvider>
+        <ToastProvider>
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected */}
+            <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
+            <Route path="/expense" element={<ProtectedLayout><AddExpense /></ProtectedLayout>} />
+            <Route path="/list" element={<ProtectedLayout><TransactionList /></ProtectedLayout>} />
+            <Route path="/settings" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+            <Route path="/net-worth" element={<ProtectedLayout><NetWorth /></ProtectedLayout>} />
+            {/* <Route path="/assets" element={<Assets />} /> */}
+                        <Route path="/assets" element={<ProtectedLayout><Assets /></ProtectedLayout>} />
+
+                        <Route path="/liabilities" element={<ProtectedLayout><Liability /></ProtectedLayout>} />
+
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </ToastProvider>
+      </SettingsProvider>
+    </AuthProvider>
+  );
+}

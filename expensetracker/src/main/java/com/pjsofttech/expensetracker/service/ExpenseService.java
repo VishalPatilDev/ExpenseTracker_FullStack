@@ -15,6 +15,25 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * CHANGES from the original version:
+ *   1. Category/Contact/Bank are now fetched with findByIdAndOwner(...),
+ *      not plain findById(...) — closes an IDOR gap that let a user
+ *      reference another user's category/contact/bank by ID.
+ *   2. BankBalanceService is now actually wired in:
+ *        - ONE_TIME expense creation  -> deduct `total` once, immediately.
+ *        - INSTALLMENT expense creation -> NO bank movement (unchanged —
+ *          this was already correct in the original design).
+ *        - addInstallmentPayment       -> deduct the payment amount, once,
+ *          per payment recorded (this is the only place installment
+ *          expenses ever touch the bank).
+ *        - deleteExpense               -> reverses whatever was actually
+ *          deducted (ONE_TIME: full total; INSTALLMENT: sum of payments
+ *          actually made) before removing the row.
+ *        - updateExpense               -> for ONE_TIME expenses, if
+ *          amount/bank changes after creation, reverses the old bank debit
+ *          and reapplies the new one inside the same transaction.
+ */
 @Service
 public class ExpenseService {
 
@@ -24,6 +43,65 @@ public class ExpenseService {
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private ContactRepository contactRepository;
     @Autowired private BankRepository bankRepository;
+    @Autowired private BankBalanceService bankBalanceService;
+
+
+
+    private void applyBankMovement(
+            TransactionType type,
+            Bank bank,
+            BigDecimal amount) {
+
+        if (bank == null || amount == null) {
+            return;
+        }
+
+        if (type == TransactionType.EXPENSE) {
+
+            bankBalanceService.deductAmount(
+                    bank,
+                    amount
+            );
+
+        } else if (type == TransactionType.INCOME) {
+
+            bankBalanceService.addAmount(
+                    bank,
+                    amount
+            );
+        }
+    }
+
+    //Helper if INCOME THEN deduct amount from bank after income deleted
+    //and if EXPENSE THEN ADD AMOUNT TO BANK AFTER EXPENSE DELETED
+    private void reverseBankMovement(
+            TransactionType type,
+            Bank bank,
+            BigDecimal amount) {
+
+        if (bank == null || amount == null) {
+            return;
+        }
+
+        if (type == TransactionType.EXPENSE) {
+
+            // Original expense deducted money.
+            // Reverse = add money back.
+            bankBalanceService.addAmount(
+                    bank,
+                    amount
+            );
+
+        } else if (type == TransactionType.INCOME) {
+
+            // Original income added money.
+            // Reverse = deduct money.
+            bankBalanceService.deductAmount(
+                    bank,
+                    amount
+            );
+        }
+    }
 
     // ═════════════════════════════════════════════════════════════════════════
     // SECTION 1 — CREATE EXPENSE
@@ -32,32 +110,52 @@ public class ExpenseService {
     @Transactional
     public ExpenseResponseDto addExpense(@Valid ExpenseRequestDto req, User loggedInUser) {
 
-        // ── 1. Resolve entities ───────────────────────────────────────────────
-        Category category = categoryRepository.findById(req.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + req.getCategoryId()));
+        if (req.getType() == null) {
+            throw new IllegalArgumentException(
+                    "Transaction type is required."
+            );
+        }
+        // ── 1. Resolve entities, scoped to the owner ───────────────────────────
+        Category category = categoryRepository.findByIdAndOwner(req.getCategoryId(), loggedInUser)
+                .orElseThrow(() -> new RuntimeException("Category not found or does not belong to user."));
 
-        Contact contact = contactRepository.findById(req.getContactId())
-                .orElseThrow(() -> new RuntimeException("Contact not found with id: " + req.getContactId()));
+        if (category.getTransactionType() != req.getType()) {
+            throw new IllegalArgumentException(
+                    "Selected category does not belong to transaction type " + req.getType()
+            );
+        }
+
+//        Contact contact = contactRepository.findByIdAndOwner(req.getContactId(), loggedInUser)
+//                .orElseThrow(() -> new RuntimeException("Contact not found or does not belong to user."));
+//Contact is OPTIONAL
+        Contact contact = null;
+
+        if (req.getContactId() != null) {
+            contact = contactRepository.findByIdAndOwner(req.getContactId(), loggedInUser)
+                    .orElseThrow(() ->
+                            new RuntimeException("Contact not found or does not belong to user."));
+        }
 
         Bank bank = null;
         if (req.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
             if (req.getBankId() == null) {
                 throw new IllegalArgumentException("Bank is required when payment method is BANK_TRANSFER.");
             }
-            bank = bankRepository.findById(req.getBankId())
-                    .orElseThrow(() -> new RuntimeException("Bank not found with id: " + req.getBankId()));
+            bank = bankRepository.findByIdAndOwner(req.getBankId(), loggedInUser)
+                    .orElseThrow(() -> new RuntimeException("Bank not found or does not belong to user."));
         }
 
         // ── 2. Calculate total on the backend ─────────────────────────────────
         BigDecimal backendTotal = calculateTotal(req.getAmount(), req.getGstPercentage(), req.getTdsPercentage());
 
-        // ── 3. Build and save expense ─────────────────────────────────────────
+        // ── 3. Build expense ────────────────────────────────────────────────────
         Expense expense = Expense.builder()
                 .owner(loggedInUser)
                 .contact(contact)
                 .category(category)
                 .bank(bank)
                 .type(req.getType())
+                .sourceType(ExpenseSourceType.MANUAL)
                 .date(req.getDate())
                 .particular(req.getParticular())
                 .amount(req.getAmount())
@@ -72,10 +170,58 @@ public class ExpenseService {
 
         // ── 4. Handle payment type ────────────────────────────────────────────
         if (req.getPaymentType() == PaymentType.ONE_TIME) {
+
             expense.setPaymentStatus(PaymentStatus.COMPLETE);
             expenseRepository.save(expense);
 
-        } else if (req.getPaymentType() == PaymentType.INSTALLMENT) {
+            // Real cash leaves the bank now, exactly once, for the full total
+//            EXPENSE + BANK_TRANSFER
+//                    ↓
+//            Bank balance - total
+            //INCOME + BANK_TRANSFER
+            //        ↓
+            //Bank balance + total
+            // (amount + GST - TDS = actual cash paid out).
+            if (bank != null) {
+
+                if (req.getType() == TransactionType.EXPENSE) {
+
+                    bankBalanceService.deductAmount(
+                            bank,
+                            backendTotal
+                    );
+
+                } else if (req.getType() == TransactionType.INCOME) {
+
+                    bankBalanceService.addAmount(
+                            bank,
+                            backendTotal
+                    );
+                }
+            }
+
+        }
+
+
+
+        else if (req.getPaymentType() == PaymentType.INSTALLMENT) {
+            //INCOME
+            // └── ONE_TIME       ✅
+            //
+            //INCOME
+            // └── INSTALLMENT    ❌
+            //EXPENSE
+            // ├── ONE_TIME       ✅
+            // └── INSTALLMENT    ✅
+             if (req.getType() == TransactionType.INCOME
+                    && req.getPaymentType() == PaymentType.INSTALLMENT) {
+
+                throw new IllegalArgumentException(
+                        "Income cannot be recorded as an installment."
+                );
+            }
+
+            // No bank movement here — nothing has actually been paid yet.
             expense.setPaymentStatus(PaymentStatus.PENDING);
             expenseRepository.save(expense);
 
@@ -111,9 +257,7 @@ public class ExpenseService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
 
-        // Security: only the owner can view
-        if (expense.getOwner() == null ||
-                !expense.getOwner().getId().equals(loggedInUser.getId())) {
+        if (expense.getOwner() == null || !expense.getOwner().getId().equals(loggedInUser.getId())) {
             throw new RuntimeException("You are not allowed to view this expense.");
         }
 
@@ -122,16 +266,22 @@ public class ExpenseService {
 
     // ═════════════════════════════════════════════════════════════════════════
     // SECTION 3 — ADD PAYMENT AGAINST A SPECIFIC INSTALLMENT
+    //             (the only point where an INSTALLMENT expense touches the bank)
     // ═════════════════════════════════════════════════════════════════════════
 
     @Transactional
     public ExpenseResponseDto addInstallmentPayment(Long installmentId,
-                                                    @Valid InstallmentPaymentRequestDto req) {
+                                                    @Valid InstallmentPaymentRequestDto req,
+                                                    User loggedInUser) {
 
         ExpenseInstallment installment = installmentRepository.findById(installmentId)
                 .orElseThrow(() -> new RuntimeException("Installment not found with id: " + installmentId));
 
         Expense expense = installment.getExpense();
+
+        if (expense.getOwner() == null || !expense.getOwner().getId().equals(loggedInUser.getId())) {
+            throw new RuntimeException("You are not allowed to modify this installment.");
+        }
 
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalArgumentException(
@@ -161,6 +311,11 @@ public class ExpenseService {
                 .build();
         paymentRepository.save(payment);
 
+        // Real cash leaves the bank now, exactly once, for this payment only.
+        if (expense.getBank() != null) {
+            bankBalanceService.deductAmount(expense.getBank(), payment.getAmount());
+        }
+
         BigDecimal newPaid = alreadyPaid.add(req.getAmount());
         if (newPaid.compareTo(BigDecimal.ZERO) <= 0) {
             installment.setStatus(InstallmentStatus.PENDING);
@@ -189,15 +344,15 @@ public class ExpenseService {
                 .collect(Collectors.toList());
     }
 
-    public List<ExpenseResponseDto> getAllExpensesByCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+    public List<ExpenseResponseDto> getAllExpensesByCategory(Long id, User loggedInUser) {
+        Category category = categoryRepository.findByIdAndOwner(id, loggedInUser)
+                .orElseThrow(() -> new RuntimeException("Category not found or does not belong to user."));
         return mapExpenses(expenseRepository.findByCategory(category));
     }
 
-    public List<ExpenseResponseDto> getAllExpensesByContact(Long id) {
-        Contact contact = contactRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Contact not found with id: " + id));
+    public List<ExpenseResponseDto> getAllExpensesByContact(Long id, User loggedInUser) {
+        Contact contact = contactRepository.findByIdAndOwner(id, loggedInUser)
+                .orElseThrow(() -> new RuntimeException("Contact not found or does not belong to user."));
         return mapExpenses(expenseRepository.findByContact(contact));
     }
 
@@ -355,24 +510,39 @@ public class ExpenseService {
                     .map(this::buildInstallmentResponse)
                     .collect(Collectors.toList());
         }
+        ContactResponseDto contactResponseDto = null;
+        if ( expense.getContact() !=null){
+            contactResponseDto =  ContactResponseDto.builder()
+                    .id(expense.getContact().getId()!=null ? expense.getContact().getId() : null)
+                    .name(expense.getContact().getName())
+                    .email(expense.getContact().getEmail())
+                    .phoneNumber(expense.getContact().getPhoneNumber())
+                    .build();
+        }
 
         return ExpenseResponseDto.builder()
                 .id(expense.getId())
                 .index(indexCounter.getAndIncrement())
                 .date(expense.getDate())
                 .type(expense.getType())
+                .sourceType(expense.getSourceType())
                 .particular(expense.getParticular())
                 .remark(expense.getRemark())
-                .contact(ContactResponseDto.builder()
-                        .id(expense.getContact().getId())
-                        .name(expense.getContact().getName())
-                        .email(expense.getContact().getEmail())
-                        .phoneNumber(expense.getContact().getPhoneNumber())
-                        .build())
-                .category(CategoryResponseDto.builder()
-                        .id(expense.getCategory().getId())
-                        .name(expense.getCategory().getName())
-                        .build())
+                .contact(contactResponseDto)
+
+
+//                .category(CategoryResponseDto.builder()
+//                        .id(expense.getCategory().getId())
+//                        .name(expense.getCategory().getName())
+//                        .build())
+                .category(
+                        expense.getCategory() != null
+                                ? CategoryResponseDto.builder()
+                                .id(expense.getCategory().getId())
+                                .name(expense.getCategory().getName())
+                                .build()
+                                : null
+                )
                 .bankId(expense.getBank() != null ? expense.getBank().getId() : null)
                 .amount(amount)
                 .gstPercentage(gstPct)
@@ -512,42 +682,67 @@ public class ExpenseService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
 
+        if (expense.getSourceType() == ExpenseSourceType.ASSET_PURCHASE) {
+            throw new IllegalArgumentException(
+                    "Asset purchase expenses must be edited from the Asset section."
+            );
+        }
         // ── 2. Security: only owner can edit ─────────────────────────────────────
-        if (expense.getOwner() == null ||
-                !expense.getOwner().getId().equals(loggedInUser.getId())) {
+        if (expense.getOwner() == null || !expense.getOwner().getId().equals(loggedInUser.getId())) {
             throw new RuntimeException("You are not allowed to update this expense.");
         }
+        if (req.getType() == null) {
+            throw new IllegalArgumentException(
+                    "Transaction type is required."
+            );
+        }
+        // ── 1. Resolve entities, scoped to the owner ───────────────────────────
+        Category category = categoryRepository.findByIdAndOwner(req.getCategoryId(), loggedInUser)
+                .orElseThrow(() -> new RuntimeException("Category not found or does not belong to user."));
 
-        // ── 3. Resolve Category ──────────────────────────────────────────────────
-        Category category = categoryRepository.findById(req.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + req.getCategoryId()));
+        if (category.getTransactionType() != req.getType()) {
+            throw new IllegalArgumentException(
+                    "Selected category does not belong to transaction type " + req.getType()
+            );
+        }
 
-        // ── 4. Resolve Contact ───────────────────────────────────────────────────
-        Contact contact = contactRepository.findById(req.getContactId())
-                .orElseThrow(() -> new RuntimeException("Contact not found with id: " + req.getContactId()));
+        // ── 3. Resolve Category/Contact/Bank, scoped to owner ────────────────────
+//        Category category = categoryRepository.findByIdAndOwner(req.getCategoryId(), loggedInUser)
+//                .orElseThrow(() -> new RuntimeException("Category not found or does not belong to user."));
 
-        // ── 5. Resolve Bank ──────────────────────────────────────────────────────
-        Bank bank = null;
+//        Contact contact = contactRepository.findByIdAndOwner(req.getContactId(), loggedInUser)
+//                .orElseThrow(() -> new RuntimeException("Contact not found or does not belong to user."));
+
+        //Contact is OPTIONAL
+        Contact contact = null;
+
+        if (req.getContactId() != null) {
+            contact = contactRepository.findByIdAndOwner(req.getContactId(), loggedInUser)
+                    .orElseThrow(() ->
+                            new RuntimeException("Contact not found or does not belong to user."));
+        }
+
+        Bank newBank = null;
         if (req.getPaymentMethod() == PaymentMethod.BANK_TRANSFER) {
             if (req.getBankId() == null) {
                 throw new IllegalArgumentException("Bank is required when payment method is BANK_TRANSFER.");
             }
-            bank = bankRepository.findById(req.getBankId())
-                    .orElseThrow(() -> new RuntimeException("Bank not found with id: " + req.getBankId()));
+            newBank = bankRepository.findByIdAndOwner(req.getBankId(), loggedInUser)
+                    .orElseThrow(() -> new RuntimeException("Bank not found or does not belong to user."));
         }
 
-        // ── 6. Calculate total on backend ────────────────────────────────────────
+        // ── 4. Calculate total on backend ────────────────────────────────────────
         BigDecimal backendTotal = calculateTotal(req.getAmount(), req.getGstPercentage(), req.getTdsPercentage());
 
         PaymentType oldPaymentType = expense.getPaymentType();
         PaymentType newPaymentType = req.getPaymentType();
 
-        // ── 7. Prevent unsafe payment-type changes ───────────────────────────────
+        Bank oldBank = expense.getBank();
+        BigDecimal oldTotal = expense.getTotal();
 
-        // INSTALLMENT → ONE_TIME: only allowed if no payments have been made yet
+        // ── 5. Prevent unsafe payment-type changes ───────────────────────────────
         if (oldPaymentType == PaymentType.INSTALLMENT && newPaymentType == PaymentType.ONE_TIME) {
-            BigDecimal existingPaid = installmentRepository
-                    .getTotalPaidByExpense(expense);   // use raw repo call, NOT calculateExpensePaidAmount
+            BigDecimal existingPaid = installmentRepository.getTotalPaidByExpense(expense);
             if (existingPaid == null) existingPaid = BigDecimal.ZERO;
 
             if (existingPaid.compareTo(BigDecimal.ZERO) > 0) {
@@ -555,19 +750,13 @@ public class ExpenseService {
                         "Cannot change an installment expense to ONE_TIME because payments already exist.");
             }
         }
+        TransactionType oldType = expense.getType();
 
-        // ONE_TIME → INSTALLMENT: only blocked if actual money was recorded
-        // (ONE_TIME expenses are always COMPLETE but have no payment records — so this is always allowed)
-        // We keep the guard only as a safety net in case business rules change.
-        if (oldPaymentType == PaymentType.ONE_TIME && newPaymentType == PaymentType.INSTALLMENT) {
-            // ONE_TIME has no installment payment records by definition — always safe to convert.
-            // Guard intentionally left empty; remove this block entirely if not needed.
-        }
 
-        // ── 8. Update basic expense fields ───────────────────────────────────────
+        // ── 6. Update basic expense fields ───────────────────────────────────────
         expense.setContact(contact);
         expense.setCategory(category);
-        expense.setBank(bank);
+        expense.setBank(newBank);
         expense.setType(req.getType());
         expense.setDate(req.getDate());
         expense.setParticular(req.getParticular());
@@ -580,18 +769,43 @@ public class ExpenseService {
         expense.setPaymentType(newPaymentType);
         expense.setPaymentMethod(req.getPaymentMethod());
 
-        // ── 9. Handle payment type ───────────────────────────────────────────────
+        // ── 7. Handle payment type + bank reversal/reapply ───────────────────────
         if (newPaymentType == PaymentType.ONE_TIME) {
+
+            // If this expense was ALREADY a settled ONE_TIME expense (money already
+            // moved), reverse the old bank debit before applying the new one —
+            // otherwise every edit would double-deduct.
+            if (oldPaymentType == PaymentType.ONE_TIME
+                    && expense.getPaymentStatus() == PaymentStatus.COMPLETE
+                    && oldBank != null) {
+//                bankBalanceService.addAmount(oldBank, oldTotal);
+                reverseBankMovement(
+                        oldType,
+                        oldBank,
+                        oldTotal
+                );
+            }
 
             expense.setPaymentStatus(PaymentStatus.COMPLETE);
             expenseRepository.save(expense);
 
+            // Apply the new transaction's bank movement
+
+            if (newBank != null) {
+//                bankBalanceService.deductAmount(newBank, backendTotal);
+                applyBankMovement(
+                        req.getType(),
+                        newBank,
+                        backendTotal
+                );
+            }
+
+            // Remove old installment schedule if required
             // Remove any unpaid installments left over from a prior INSTALLMENT state
             if (oldPaymentType == PaymentType.INSTALLMENT) {
                 List<ExpenseInstallment> installments =
                         installmentRepository.findByExpenseOrderByInstallmentNumberAsc(expense);
 
-                // Double-check no payments exist (already guarded above, but be safe)
                 boolean hasPayments = installments.stream().anyMatch(inst -> {
                     BigDecimal p = paymentRepository.getTotalPaidByInstallment(inst);
                     return p != null && p.compareTo(BigDecimal.ZERO) > 0;
@@ -606,6 +820,10 @@ public class ExpenseService {
 
         } else if (newPaymentType == PaymentType.INSTALLMENT) {
 
+            // INSTALLMENT expenses never hold a bank debit at the expense level —
+            // any money already paid lives in ExpenseInstallmentPayment rows and
+            // was already deducted when each payment was recorded. Nothing to
+            // reverse/reapply here for the schedule itself.
             validateInstallmentSchedule(req, backendTotal);
             expenseRepository.save(expense);
             updateInstallmentSchedule(expense, req.getInstallments());
@@ -617,30 +835,47 @@ public class ExpenseService {
             throw new IllegalArgumentException("Unknown payment type: " + newPaymentType);
         }
 
-        // ── 10. Reload and return ────────────────────────────────────────────────
+        // ── 8. Reload and return ────────────────────────────────────────────────
         Expense updated = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Could not reload expense after update"));
 
         return buildExpenseResponse(updated, new AtomicInteger(1));
     }
 
+    // ═════════════════════════════════════════════════════════════════════════
+    // SECTION 10 — DELETE EXPENSE
+    // ═════════════════════════════════════════════════════════════════════════
 
     @Transactional
     public String deleteExpense(Long expenseId, User loggedInUser) {
 
+
         // 1. Find expense
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() ->
-                        new RuntimeException("Expense not found with id: " + expenseId));
+                .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
+        if (expense.getSourceType() == ExpenseSourceType.ASSET_PURCHASE) {
+            throw new IllegalArgumentException(
+                    "Asset purchase expenses cannot be deleted directly. Delete the asset instead."
+            );
+        }
 
         // 2. Security: only owner can delete
-        if (expense.getOwner() == null ||
-                !expense.getOwner().getId().equals(loggedInUser.getId())) {
+        if (expense.getOwner() == null || !expense.getOwner().getId().equals(loggedInUser.getId())) {
             throw new RuntimeException("You are not allowed to delete this expense.");
         }
 
-        // 3. If installment expense, delete payments first
-        if (expense.getPaymentType() == PaymentType.INSTALLMENT) {
+        // 3. Reverse whatever cash actually moved, before touching any rows.
+        if (expense.getPaymentType() == PaymentType.ONE_TIME) {
+
+            if (expense.getBank() != null && expense.getPaymentStatus() == PaymentStatus.COMPLETE) {
+                reverseBankMovement(
+                        expense.getType(),
+                        expense.getBank(),
+                        expense.getTotal()
+                );
+            }
+
+        } else if (expense.getPaymentType() == PaymentType.INSTALLMENT) {
 
             List<ExpenseInstallment> installments =
                     installmentRepository.findByExpenseOrderByInstallmentNumberAsc(expense);
@@ -651,19 +886,76 @@ public class ExpenseService {
                         paymentRepository.findByInstallmentOrderByPaymentDateAsc(installment);
 
                 if (payments != null && !payments.isEmpty()) {
+
+                        BigDecimal totalPaidThisInstallment = payments.stream()
+                                .map(ExpenseInstallmentPayment::getAmount)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    if (expense.getBank() != null) {
+                        bankBalanceService.addAmount(
+                                expense.getBank(),
+                                totalPaidThisInstallment
+                        );
+                    }
+
                     paymentRepository.deleteAll(payments);
                 }
             }
 
-            // 4. Delete installments
             if (!installments.isEmpty()) {
                 installmentRepository.deleteAll(installments);
             }
         }
 
-        // 5. Delete expense
+        // 4. Delete expense
         expenseRepository.delete(expense);
 
         return "Expense Deleted Successfully";
+    }
+
+
+
+    @Transactional
+    public Expense createAssetPurchaseExpense(
+            Asset asset,
+            AssetAcquisition acquisition,
+            User loggedInUser) {
+
+        Bank bank = acquisition.getBank();
+
+        Expense expense = Expense.builder()
+                .owner(loggedInUser)
+                .asset(asset)
+                       .contact(asset.getContact())
+                       .category(null)
+                .bank(bank)
+                .type(TransactionType.EXPENSE)
+                .sourceType(ExpenseSourceType.ASSET_PURCHASE)
+                .date(asset.getPurchaseDate().atStartOfDay())
+                .particular("Purchase - " + asset.getName())
+                .amount(acquisition.getAmount())
+                .gstPercentage(BigDecimal.ZERO)
+                .tdsPercentage(BigDecimal.ZERO)
+                .total(acquisition.getAmount())
+                .paymentType(PaymentType.ONE_TIME)
+                .paymentMethod(acquisition.getPaymentMethod())
+                .paymentStatus(PaymentStatus.COMPLETE)
+                .remark(acquisition.getRemark())
+                .build();
+
+        expenseRepository.save(expense);
+
+        // Link both sides
+        asset.setPurchaseExpense(expense);
+        expense.setAsset(asset);
+
+        // Only actual bank-funded purchases move bank balance.
+        if (bank != null) {
+            bankBalanceService.deductAmount(
+                    bank,
+                    acquisition.getAmount()
+            );
+        }
+
+        return expense;
     }
 }

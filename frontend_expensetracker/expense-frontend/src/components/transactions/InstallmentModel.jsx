@@ -7,8 +7,8 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { CheckCircle2, AlertCircle, IndianRupee } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ export default function InstallmentModal({
     );
 
     const remainingPaise = totalPaise - scheduledPaise;
-    const isBalanced     = remainingPaise === 0;
+    const isBalanced = remainingPaise === 0;
     const isOverAllocated = remainingPaise < 0;
 
     // ── Generate equal-split installments ─────────────────────────────────────
@@ -71,9 +71,9 @@ export default function InstallmentModal({
         const n = Number(count);
         if (!n || n <= 0) { onInstallmentChange("replace", []); return; }
 
-        const basePaise   = Math.floor(totalPaise / n);
-        const remainder   = totalPaise - basePaise * n;
-        const today       = getTodayDate();
+        const basePaise = Math.floor(totalPaise / n);
+        const remainder = totalPaise - basePaise * n;
+        const today = getTodayDate();
 
         const newList = Array.from({ length: n }, (_, i) => {
             const paise = i === n - 1 ? basePaise + remainder : basePaise;
@@ -96,9 +96,9 @@ export default function InstallmentModal({
 
     // ── Handle amount change with smart redistribution ────────────────────────
     const handleAmountChange = (index, rawValue) => {
-        const newPaise    = toPaise(rawValue);
-        const usedBefore  = installments.slice(0, index).reduce((s, i) => s + toPaise(i.dueAmount), 0);
-        const maxPaise    = totalPaise - usedBefore;
+        const newPaise = toPaise(rawValue);
+        const usedBefore = installments.slice(0, index).reduce((s, i) => s + toPaise(i.dueAmount), 0);
+        const maxPaise = totalPaise - usedBefore;
 
         if (newPaise > maxPaise) {
             alert(`Maximum allowed: ₹${fromPaise(maxPaise)}`);
@@ -109,16 +109,16 @@ export default function InstallmentModal({
         updated[index].dueAmount = rawValue;
 
         // Redistribute remaining among subsequent installments
-        const leftPaise   = totalPaise - usedBefore - newPaise;
-        const afterCount  = updated.length - index - 1;
+        const leftPaise = totalPaise - usedBefore - newPaise;
+        const afterCount = updated.length - index - 1;
 
         if (afterCount > 0) {
             const splitPaise = Math.floor(leftPaise / afterCount);
-            let distributed  = 0;
+            let distributed = 0;
 
             for (let i = index + 1; i < updated.length; i++) {
-                const isLast  = i === updated.length - 1;
-                const amt     = isLast ? leftPaise - distributed : splitPaise;
+                const isLast = i === updated.length - 1;
+                const amt = isLast ? leftPaise - distributed : splitPaise;
                 updated[i].dueAmount = amt > 0 ? (amt / 100).toFixed(2) : "";
                 distributed += amt;
             }
@@ -183,13 +183,12 @@ export default function InstallmentModal({
                     </div>
                     <div className="border-t pt-2 flex justify-between items-center">
                         <span className="text-muted-foreground">Remaining to allocate</span>
-                        <span className={`font-bold flex items-center gap-1.5 ${
-                            isBalanced
+                        <span className={`font-bold flex items-center gap-1.5 ${isBalanced
                                 ? "text-emerald-600"
                                 : isOverAllocated
                                     ? "text-red-600"
                                     : "text-amber-600"
-                        }`}>
+                            }`}>
                             {isBalanced
                                 ? <><CheckCircle2 className="w-4 h-4" /> ₹0.00</>
                                 : <><AlertCircle className="w-4 h-4" /> ₹{fromPaise(Math.abs(remainingPaise))}{isOverAllocated ? " over" : ""}</>
@@ -219,8 +218,8 @@ export default function InstallmentModal({
                 {/* ── Installment rows ─────────────────────────────────────── */}
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-0">
                     {installments.map((inst, i) => {
-                        const instPaise   = toPaise(inst.dueAmount);
-                        const pct         = totalPaise > 0 ? Math.round((instPaise / totalPaise) * 100) : 0;
+                        const instPaise = toPaise(inst.dueAmount);
+                        const pct = totalPaise > 0 ? Math.round((instPaise / totalPaise) * 100) : 0;
 
                         return (
                             <div

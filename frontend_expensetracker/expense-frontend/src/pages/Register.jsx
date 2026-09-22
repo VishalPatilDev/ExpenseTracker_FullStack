@@ -1,217 +1,73 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api/api";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "@/api/authApi";
+import Button from "@/components/ui/Button";
+import FormField, { inputCls } from "@/components/ui/FormField";
+import { useAsync } from "@/hooks/useAsync";
 
-import backgroundImage from "../assets/ee.jpg";
+export default function Register() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ name: "", email: "", password: "", phoneNumber: "" });
+  const { execute, loading, error } = useAsync(register);
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  const handle = (e) =>
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+  const submit = async (e) => {
+    e.preventDefault();
+    await execute(form);
+    navigate("/login");
+  };
 
-const Register = () => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const navigate = useNavigate();
-
-    const register = async (e) => {
-        e.preventDefault();
-
-        if (!name || !email || !password || !phoneNumber) {
-            alert("Please fill in all fields");
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            const response = await api.post(
-                "/pjsofttech_welcome/register",
-                {
-                    name,
-                    phoneNumber,
-                    email,
-                    password,
-                }
-            );
-
-            console.log(
-                "REGISTER RESPONSE:",
-                response.data
-            );
-
-            alert("Registration successful!");
-
-            navigate("/login");
-        } catch (error) {
-            console.error(
-                "Registration error:",
-                error
-            );
-
-            alert(
-                error.response?.data?.message ||
-                "Registration failed"
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950">
-
-            {/* Background */}
-            <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                    backgroundImage: `url(${backgroundImage})`,
-                }}
-            />
-
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-
-            {/* Register Card */}
-            <Card className="relative z-10 w-[calc(100%-2rem)] max-w-md border-white/20 bg-white/90 shadow-2xl backdrop-blur-xl">
-
-                <CardHeader className="space-y-2 text-center">
-
-                    <CardTitle className="text-3xl font-bold tracking-tight">
-                        Create Account
-                    </CardTitle>
-
-                    <CardDescription>
-                        Create your Expense Tracker account
-                    </CardDescription>
-
-                </CardHeader>
-
-                <CardContent>
-
-                    <form
-                        onSubmit={register}
-                        className="space-y-4"
-                    >
-
-                        {/* Name */}
-                        <div className="space-y-2">
-
-                            <Label htmlFor="name">
-                                Full Name
-                            </Label>
-
-                            <Input
-                                id="name"
-                                type="text"
-                                placeholder="Enter your name"
-                                value={name}
-                                onChange={(e) =>
-                                    setName(e.target.value)
-                                }
-                                autoComplete="name"
-                            />
-
-                        </div>
-
-                        {/* Email */}
-                        <div className="space-y-2">
-
-                            <Label htmlFor="email">
-                                Email
-                            </Label>
-
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="Enter your email"
-                                value={email}
-                                onChange={(e) =>
-                                    setEmail(e.target.value)
-                                }
-                                autoComplete="email"
-                            />
-
-                        </div>
-
-                        {/* Phone */}
-                        <div className="space-y-2">
-
-                            <Label htmlFor="phoneNumber">
-                                Phone Number
-                            </Label>
-
-                            <Input
-                                id="phoneNumber"
-                                type="tel"
-                                placeholder="Enter phone number"
-                                value={phoneNumber}
-                                onChange={(e) =>
-                                    setPhoneNumber(e.target.value)
-                                }
-                                autoComplete="tel"
-                            />
-
-                        </div>
-
-                        {/* Password */}
-                        <div className="space-y-2">
-
-                            <Label htmlFor="password">
-                                Password
-                            </Label>
-
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="Create a password"
-                                value={password}
-                                onChange={(e) =>
-                                    setPassword(e.target.value)
-                                }
-                                autoComplete="new-password"
-                            />
-
-                        </div>
-
-                        {/* Register */}
-                        <Button
-                            type="submit"
-                            className="w-full border- hover:bg-gray-400"
-                            disabled={loading}
-                        >
-                            {loading
-                                ? "Creating Account..."
-                                : "Register"}
-                        </Button>
-
-                        {/* Login */}
-                        <Button
-                            type="button"
-                            // variant="outline"
-                            className="w-full  hover:text-lg underline"
-                            onClick={() => navigate("/login")}
-                        >
-                            Already have an account? Login
-                        </Button>
-
-                    </form>
-
-                </CardContent>
-            </Card>
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-semibold text-white">FinTrack</h1>
+          <p className="text-slate-400 text-sm mt-1">Create your account</p>
         </div>
-    );
-};
 
-export default Register;
+        <form
+          onSubmit={submit}
+          className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col gap-4"
+        >
+          {error && (
+            <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          {[
+            { name: "name", label: "Full Name", type: "text", placeholder: "Rahul Sharma" },
+            { name: "email", label: "Email", type: "email", placeholder: "you@example.com" },
+            { name: "password", label: "Password", type: "password", placeholder: "••••••••" },
+            { name: "phoneNumber", label: "Phone Number", type: "tel", placeholder: "9876543210" },
+          ].map(({ name, label, type, placeholder }) => (
+            <FormField key={name} label={label}>
+              <input
+                name={name}
+                type={type}
+                required
+                placeholder={placeholder}
+                value={form[name]}
+                onChange={handle}
+                className={inputCls}
+              />
+            </FormField>
+          ))}
+
+          <Button type="submit" loading={loading} className="w-full mt-1">
+            Create account
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-slate-500 mt-4">
+          Already have an account?{" "}
+          <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}

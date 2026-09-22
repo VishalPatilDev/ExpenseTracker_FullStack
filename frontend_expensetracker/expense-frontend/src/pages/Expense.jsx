@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../api/api";
+import api from "../api/axiosInstance";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import InstallmentModal from "@/components/transactions/InstallmentModel";
 import { useParams, useNavigate } from "react-router-dom";

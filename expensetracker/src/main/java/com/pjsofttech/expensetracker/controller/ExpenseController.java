@@ -2,7 +2,9 @@ package com.pjsofttech.expensetracker.controller;
 
 import com.pjsofttech.expensetracker.dto.*;
 import com.pjsofttech.expensetracker.model.*;
+import com.pjsofttech.expensetracker.repository.UserRepository;
 import com.pjsofttech.expensetracker.service.ExpenseService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,35 +17,40 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/pjsofttech/expense")
+@SecurityRequirement(name = "bearerAuth")
+
 public class ExpenseController {
 
     @Autowired
     private ExpenseService expenseService;
+    @Autowired
+    private UserRepository userRepository;
 
     // ── Create expense (with optional installment schedule) ──────────────────
     @PostMapping
-    public ResponseEntity<ExpenseResponseDto> addExpense(
+    public ResponseEntity<?> addExpense(
             @RequestBody @Valid ExpenseRequestDto request,
             @AuthenticationPrincipal User loggedInUser) {
-
-        return ResponseEntity.ok(expenseService.addExpense(request, loggedInUser));
+        return ResponseEntity.ok(ApiResponse.success("Expense Added", expenseService.addExpense(request, loggedInUser)));
     }
 
     // ── Get all expenses for logged-in user ───────────────────────────────────
     @GetMapping("/expenses")
-    public ResponseEntity<List<ExpenseResponseDto>> getAllExpenses(
+    public ResponseEntity<ApiResponse<List<ExpenseResponseDto>>> getAllExpenses(
             @AuthenticationPrincipal User loggedInUser) {
 
-        return ResponseEntity.ok(expenseService.getAllExpenses(loggedInUser));
+        return ResponseEntity.ok(ApiResponse.success("Expenses Fetched", expenseService.getAllExpenses(loggedInUser)));
+
     }
 
     // ── Get single expense by ID (used by edit form) ──────────────────────────
     @GetMapping("/{id}")
-    public ResponseEntity<ExpenseResponseDto> getExpenseById(
+    public ResponseEntity<?> getExpenseById(
             @PathVariable Long id,
             @AuthenticationPrincipal User loggedInUser) {
+        return ResponseEntity.ok(ApiResponse.success("Expense Fetched", expenseService.getExpenseById(id, loggedInUser)));
 
-        return ResponseEntity.ok(expenseService.getExpenseById(id, loggedInUser));
+
     }
 
     // ── Add payment against a SPECIFIC installment ────────────────────────────
@@ -57,29 +64,41 @@ public class ExpenseController {
     //   - This URL clearly expresses: "record a payment against installment X"
     //
     @PostMapping("/installment/{installmentId}/payment")
-    public ResponseEntity<ExpenseResponseDto> addInstallmentPayment(
+    public ResponseEntity<?> addInstallmentPayment(
+            Authentication authentication,
             @PathVariable Long installmentId,
             @RequestBody @Valid InstallmentPaymentRequestDto request) {
+        User loggedInUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(()->new RuntimeException("User Not Found"));
 
-        return ResponseEntity.ok(expenseService.addInstallmentPayment(installmentId, request));
+
+        return ResponseEntity.ok(ApiResponse.success("Added Installment Payment", expenseService.addInstallmentPayment(installmentId, request,loggedInUser)));
+
+
     }
 
     // ── Filters ───────────────────────────────────────────────────────────────
 
     @GetMapping("/by-category/{id}")
-    public ResponseEntity<List<ExpenseResponseDto>> getByCategory(@PathVariable Long id) {
-        return ResponseEntity.ok(expenseService.getAllExpensesByCategory(id));
+    public ResponseEntity<?> getByCategory(@PathVariable Long id,Authentication authentication) {
+        User loggedInUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(()->new RuntimeException("User Not Found"));
+        return ResponseEntity.ok(ApiResponse.success("Fetched Expenses By Category", expenseService.getAllExpensesByCategory(id,loggedInUser)));
+
     }
 
     @GetMapping("/by-contact/{id}")
-    public ResponseEntity<List<ExpenseResponseDto>> getByContact(@PathVariable Long id) {
-        return ResponseEntity.ok(expenseService.getAllExpensesByContact(id));
+    public ResponseEntity<?> getByContact(@PathVariable Long id,Authentication authentication) {
+        User loggedInUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(()->new RuntimeException("User Not Found"));
+        return ResponseEntity.ok(ApiResponse.success("Fetched Expenses By Contact", expenseService.getAllExpensesByContact(id,loggedInUser)));
     }
 
     @GetMapping("/by-payment-type")
-    public ResponseEntity<List<ExpenseResponseDto>> getByPaymentType(
+    public ResponseEntity<?> getByPaymentType(
             @RequestParam PaymentType type) {
-        return ResponseEntity.ok(expenseService.getAllExpensesByPaymentType(type));
+        return ResponseEntity.ok(ApiResponse.success("Fetched Expenses By PaymentType", expenseService.getAllExpensesByPaymentType(type)));
+
     }
 
     @GetMapping("/by-payment-method")
@@ -101,22 +120,23 @@ public class ExpenseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ExpenseResponseDto> updateExpense(
+    public ResponseEntity<?> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseRequestDto req,
             Authentication authentication
     ) {
         User loggedInUser = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(expenseService.updateExpense(id, req, loggedInUser));
+        return ResponseEntity.ok(ApiResponse.success("Expense Updated", expenseService.updateExpense(id, req, loggedInUser)));
     }
 
     @DeleteMapping("/{expenseId}")
-    public ResponseEntity<String> deleteExpense(
+    public ResponseEntity<?> deleteExpense(
             @PathVariable Long expenseId,
             @AuthenticationPrincipal User loggedInUser) {
 
-        return ResponseEntity.ok(
-                expenseService.deleteExpense(expenseId, loggedInUser)
-        );
+        return ResponseEntity.ok(ApiResponse.success("Expense Deleted",
+                expenseService.deleteExpense(expenseId, loggedInUser)));
+
+
     }
 }

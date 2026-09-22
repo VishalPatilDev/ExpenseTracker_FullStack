@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { HandCoins } from "lucide-react";
 
 
@@ -15,7 +15,7 @@ export default function Navbar() {
     return (
         <header className="border bg-background bg-blue-300">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-                
+
                 {/* Logo */}
                 <NavLink
                     to="/dashboard"
@@ -40,7 +40,7 @@ export default function Navbar() {
                                     cn(
                                         "text-sm",
                                         isActive &&
-                                            "bg-accent text-accent-foreground"
+                                        "bg-accent text-accent-foreground"
                                     )
                                 }
                             >

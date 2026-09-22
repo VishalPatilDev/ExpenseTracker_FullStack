@@ -2,24 +2,15 @@ FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-# Copy Maven wrapper and project files
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
+COPY .mvn .mvn
+COPY mvnw .
+COPY pom.xml .
 
-# Make Maven wrapper executable
 RUN chmod +x mvnw
+RUN ./mvnw dependency:go-offline
 
-# Download dependencies
-RUN ./mvnw dependency:go-offline -B
+COPY src src
 
-# Copy source code
-COPY src/ src/
+RUN ./mvnw clean package -DskipTests
 
-# Build Spring Boot application
-RUN ./mvnw clean package -DskipTests -B
-
-# Application port
-EXPOSE 8080
-
-# Start application
 CMD ["sh", "-c", "java -jar target/*.jar"]
