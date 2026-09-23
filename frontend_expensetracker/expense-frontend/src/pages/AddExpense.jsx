@@ -76,6 +76,19 @@ export default function AddExpense() {
   const set = (name, value) => setForm((p) => ({ ...p, [name]: value }));
   const handle = (e) => set(e.target.name, e.target.value);
 
+  // ⭐ CHANGED #1
+  // Filter categories according to selected transaction type.
+  //
+  // Example:
+  // form.type === "EXPENSE"
+  //   -> only EXPENSE categories are shown
+  //
+  // form.type === "INCOME"
+  //   -> only INCOME categories are shown
+  const filteredCategories = categories.filter(
+    (category) => category.transactionType === form.type
+  );
+
   const total = calcTotal(
     form.amount,
     hasGst ? form.gstPercentage : 0,
@@ -103,7 +116,10 @@ export default function AddExpense() {
 
     const payload = {
       type: form.type,
-      contactId: Number(form.contactId),
+      // ⭐ Contact is optional.
+    // Empty select value "" must become null, NOT 0.
+    contactId: form.contactId ? Number(form.contactId) : null,
+
       categoryId: Number(form.categoryId),
       date: dateToLocalDateTime(form.date),
       particular: form.particular,
@@ -154,8 +170,9 @@ export default function AddExpense() {
               <option value="INCOME">Income</option>
             </select>
           </FormField>
+
           <FormField label="Contact">
-            <select name="contactId" value={form.contactId} onChange={handle} required className={selectCls}>
+            <select name="contactId" value={form.contactId} onChange={handle} className={selectCls}>
               <option value="">Select contact</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -169,11 +186,42 @@ export default function AddExpense() {
           <FormField label="Date">
             <input type="date" name="date" value={form.date} onChange={handle} required className={inputCls} />
           </FormField>
-          <FormField label="Category">
+          {/* <FormField label="Category">
             <select name="categoryId" value={form.categoryId} onChange={handle} required className={selectCls}>
               <option value="">Select category</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </FormField> */}
+          {/* ⭐ CHANGED #3
+              Use filteredCategories instead of categories.
+              
+              Previously:
+              categories.map(...)
+
+              Now:
+              filteredCategories.map(...)
+              
+              So only categories matching the selected
+              Expense/Income type will appear.
+          */}
+          <FormField label="Category">
+            <select
+              name="categoryId"
+              value={form.categoryId}
+              onChange={handle}
+              required
+              className={selectCls}
+            >
+              <option value="">
+                Select category
+              </option>
+
+              {filteredCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </FormField>

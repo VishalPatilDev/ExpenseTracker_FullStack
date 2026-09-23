@@ -102,10 +102,15 @@ export default function NetWorth() {
 
   const chartMax = projection
     ? Math.max(
-        ...projection.yearlyData.map((d) =>
-          Math.max(d.actualNetWorth ?? 0, d.projectedNetWorth ?? 0, d.targetNetWorth ?? 0)
-        ), 1
-      )
+      ...projection.yearlyData.map((d) =>
+        Math.max(
+          Number(d.actualNetWorth ?? 0),
+          Number(d.projectedNetWorth ?? 0),
+          Number(d.targetNetWorth ?? 0)
+        )
+      ),
+      1
+    )
     : 1;
 
   return (
@@ -169,17 +174,16 @@ export default function NetWorth() {
       {target && (
         <div className="bg-slate-900 border border-indigo-500/20 rounded-xl p-5">
           <p className="text-xs text-indigo-400 mb-3 font-medium uppercase tracking-widest">Active Target</p>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            {[
-              { label: "Target amount", val: `₹${formatINR(target.targetAmount)}` },
-              { label: "Target year", val: target.targetYear },
-              { label: "Inflation rate", val: `${target.inflationRate}%` },
-            ].map(({ label, val }) => (
-              <div key={label}>
-                <p className="text-xs text-slate-500">{label}</p>
-                <p className="font-medium text-white">{val}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">            {[
+            { label: "Target amount", val: `₹${formatINR(target.targetAmount)}` },
+            { label: "Target year", val: target.targetYear },
+            { label: "Inflation rate", val: `${target.inflationRate}%` },
+          ].map(({ label, val }) => (
+            <div key={label}>
+              <p className="text-xs text-slate-500">{label}</p>
+              <p className="font-medium text-white">{val}</p>
+            </div>
+          ))}
           </div>
         </div>
       )}
@@ -194,21 +198,139 @@ export default function NetWorth() {
             </span>
           </div>
 
-          {/* Summary bar */}
-          <div className="grid grid-cols-3 gap-4 mb-5 mt-3">
-            {[
-              { label: "Required annual saving", val: projection.summary?.requiredAnnualSaving },
-              { label: "Progress", val: null, pct: projection.summary?.progressPercentage },
-              { label: "Years remaining", val: null, count: projection.summary?.yearsRemaining },
-            ].map(({ label, val, pct, count }) => (
-              <div key={label} className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-xs text-slate-500 mb-1">{label}</p>
-                {val != null && <p className="text-sm font-semibold text-white">₹{formatINR(val)}</p>}
-                {pct != null && <p className="text-sm font-semibold text-indigo-400">{formatINR(pct)}%</p>}
-                {count != null && <p className="text-sm font-semibold text-white">{count} yrs</p>}
-              </div>
-            ))}
+          {/* Projection summary */}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 mt-3">
+
+            {/* Required annual saving */}
+
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Required annual saving
+              </p>
+
+
+              <p className="text-sm font-semibold text-white">
+                ₹{formatINR(projection.summary?.requiredAnnualSaving)}
+              </p>
+
+
+            </div>
+
+            {/* Progress */}
+
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Progress
+              </p>
+
+
+              <p className="text-sm font-semibold text-indigo-400">
+                {formatINR(projection.summary?.progressPercentage)}%
+              </p>
+
+
+            </div>
+
+            {/* Years remaining */}
+
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Years remaining
+              </p>
+
+
+              <p className="text-sm font-semibold text-white">
+                {projection.summary?.yearsRemaining} yrs
+              </p>
+
+
+            </div>
+
+            {/* Target amount */}
+
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Target amount
+              </p>
+
+
+              <p className="text-sm font-semibold text-amber-400">
+                ₹{formatINR(projection.summary?.targetAmount)}
+              </p>
+
+
+            </div>
           </div>
+
+          {/* Projection assumptions */}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+
+            {/* Base annual income */}
+
+            <div className="bg-slate-800/40 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Base annual income
+              </p>
+
+
+              <p className="text-sm font-semibold text-emerald-400">
+                {projection.assumptions?.baseAnnualIncome != null
+                  ? `₹${formatINR(projection.assumptions.baseAnnualIncome)}`
+                  : "N/A"}
+              </p>
+
+
+            </div>
+
+            {/* Base annual expense */}
+
+            <div className="bg-slate-800/40 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Base annual expense
+              </p>
+
+
+              <p className="text-sm font-semibold text-rose-400">
+                {projection.assumptions?.baseAnnualExpense != null
+                  ? `₹${formatINR(projection.assumptions.baseAnnualExpense)}`
+                  : "N/A"}
+              </p>
+
+
+            </div>
+
+            {/* Inflation rate */}
+
+            <div className="bg-slate-800/40 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Inflation rate
+              </p>
+
+              <p className="text-sm font-semibold text-white">
+                {projection.assumptions?.inflationRate ?? 0}%
+              </p>
+
+
+            </div>
+
+            {/* Projection method */}
+
+            <div className="bg-slate-800/40 rounded-lg p-3">
+              <p className="text-xs text-slate-500 mb-1">
+                Projection method
+              </p>
+
+
+              <p className="text-sm font-semibold text-indigo-400">
+                {projection.assumptions?.projectionMethod ?? "N/A"}
+              </p>
+
+
+            </div>
+          </div>
+
 
           {/* Simple bar chart */}
           <div className="flex items-end gap-1 h-40">
