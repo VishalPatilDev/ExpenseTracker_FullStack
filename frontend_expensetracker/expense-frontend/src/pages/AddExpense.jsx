@@ -117,8 +117,8 @@ export default function AddExpense() {
     const payload = {
       type: form.type,
       // ⭐ Contact is optional.
-    // Empty select value "" must become null, NOT 0.
-    contactId: form.contactId ? Number(form.contactId) : null,
+      // Empty select value "" must become null, NOT 0.
+      contactId: form.contactId ? Number(form.contactId) : null,
 
       categoryId: Number(form.categoryId),
       date: dateToLocalDateTime(form.date),
