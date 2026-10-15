@@ -14,7 +14,7 @@ import {
 } from "@/api/assetsApi";
 
 import { useAsync } from "@/hooks/useAsync";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls, selectCls } from "@/components/ui/FormField";
 import Modal from "@/components/ui/Modal";
 import { useToastContext } from "@/context/ToastContext";
@@ -312,7 +312,7 @@ function AssetForm({
                                                 try {
                                                     const response =
                                                         await createAssetCategory(
-                                                            {name:categorySearch.trim()}
+                                                            { name: categorySearch.trim() }
                                                         );
 
                                                     const newCategory =
@@ -1146,9 +1146,9 @@ export default function Asset() {
                     liabilities={liabilities}
                     liabilitiesLoading={liabilitiesLoading}
                     contacts={contacts}
-    contactsLoading={contactsLoading}
-    banks={banks}
-    banksLoading={banksLoading}
+                    contactsLoading={contactsLoading}
+                    banks={banks}
+                    banksLoading={banksLoading}
                 />
             </Modal>
 

@@ -11,7 +11,7 @@ import {
 } from "@/api/assetsApi";
 
 import { useAsync } from "@/hooks/useAsync";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls, selectCls } from "@/components/ui/FormField";
 import Modal from "@/components/ui/Modal";
 import { useToastContext } from "@/context/ToastContext";

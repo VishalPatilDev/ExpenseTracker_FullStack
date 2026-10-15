@@ -7,7 +7,7 @@ import {
 import { useAsync } from "@/hooks/useAsync";
 import { useToastContext } from "@/context/ToastContext";
 import { formatINR } from "@/utils/formatters";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls } from "@/components/ui/FormField";
 import Spinner from "@/components/ui/Spinner";
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "@/api/authApi";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls } from "@/components/ui/FormField";
 import { useAsync } from "@/hooks/useAsync";
 

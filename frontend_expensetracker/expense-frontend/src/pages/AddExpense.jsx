@@ -4,7 +4,7 @@ import { useToastContext } from "@/context/ToastContext";
 import { createExpense } from "@/api/expenseApi";
 import { useAsync } from "@/hooks/useAsync";
 import { calcTotal, todayISO, dateToLocalDateTime, formatINR } from "@/utils/formatters";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls, selectCls } from "@/components/ui/FormField";
 import Modal from "@/components/ui/Modal";
 

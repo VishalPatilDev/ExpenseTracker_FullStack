@@ -7,8 +7,8 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, IndianRupee } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -184,10 +184,10 @@ export default function InstallmentModal({
                     <div className="border-t pt-2 flex justify-between items-center">
                         <span className="text-muted-foreground">Remaining to allocate</span>
                         <span className={`font-bold flex items-center gap-1.5 ${isBalanced
-                                ? "text-emerald-600"
-                                : isOverAllocated
-                                    ? "text-red-600"
-                                    : "text-amber-600"
+                            ? "text-emerald-600"
+                            : isOverAllocated
+                                ? "text-red-600"
+                                : "text-amber-600"
                             }`}>
                             {isBalanced
                                 ? <><CheckCircle2 className="w-4 h-4" /> ₹0.00</>

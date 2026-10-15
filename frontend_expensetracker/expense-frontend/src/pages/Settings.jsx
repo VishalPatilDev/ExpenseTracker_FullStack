@@ -4,10 +4,10 @@ import { useToastContext } from "@/context/ToastContext";
 import {
     createContact, updateContact, deleteContact,
     createCategory, deleteCategory,
-    createBank, deleteBank,createAssetCategory,deleteAssetCategory
+    createBank, deleteBank, createAssetCategory, deleteAssetCategory
 } from "@/api/settingsApi";
 import { useAsync } from "@/hooks/useAsync";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/button";
 import FormField, { inputCls } from "@/components/ui/FormField";
 import Modal from "@/components/ui/Modal";
 import { Trash2, Pencil, Plus } from "lucide-react";

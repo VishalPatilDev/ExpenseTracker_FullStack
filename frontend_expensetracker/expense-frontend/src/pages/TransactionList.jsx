@@ -5,8 +5,8 @@ import { useToastContext } from "@/context/ToastContext";
 import { addInstallmentPayment } from "@/api/expenseApi";
 import { useAsync } from "@/hooks/useAsync";
 import { formatINR, formatDateTime, todayISO } from "@/utils/formatters";
-import Badge from "@/components/ui/Badge";
-import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/badge";
+import Button from "@/components/ui/button";
 import Modal from "@/components/ui/Modal";
 import FormField, { inputCls } from "@/components/ui/FormField";
 import Spinner from "@/components/ui/Spinner";
@@ -147,7 +147,7 @@ export default function TransactionList() {
   }), [filtered]);
 
   const downloadCSV = () => {
-    const headers = ["#","ID","Date","Type","Contact","Category","Particular","Amount","GST%","GST Amt","TDS%","Total","Paid","Pending","Payment Type","Method","Status","Remark"];
+    const headers = ["#", "ID", "Date", "Type", "Contact", "Category", "Particular", "Amount", "GST%", "GST Amt", "TDS%", "Total", "Paid", "Pending", "Payment Type", "Method", "Status", "Remark"];
     const rows = filtered.map((e, i) => [
       i + 1, e.id, formatDateTime(e.date), e.type,
       e.contact?.name || "", e.category?.name || "",
@@ -265,7 +265,7 @@ export default function TransactionList() {
         <table className="w-full text-xs text-left">
           <thead className="bg-slate-800/60">
             <tr>
-              {["#","Date","Type","Contact","Category","Particular","Amount","GST","TDS","Total","Paid","Pending","Method","Status","Action"].map((h) => (
+              {["#", "Date", "Type", "Contact", "Category", "Particular", "Amount", "GST", "TDS", "Total", "Paid", "Pending", "Method", "Status", "Action"].map((h) => (
                 <th key={h} className="px-3 py-2.5 font-medium text-slate-400 whitespace-nowrap">{h}</th>
               ))}
             </tr>
